@@ -79,19 +79,20 @@ edgesColors = np.average(np.array(edgesColors), axis=1)
 
 
 citation_network_3d = FurySuperActorNetwork(
-	positions=positions,
-	colors=colors,
-	scales=5,
-	marker='3d'
+        positions=positions,
+        colors=colors,
+        scales=5,
+        marker='3d'
 )
 print(positions.min(), positions.max())
 citation_network_symbols = FurySuperActorNetwork(
-	positions=positions+np.array([500, 0, 0]),
-	colors=colors,
-	edge_width = .1,
-	edge_color=[255, 255, 255],
-	marker= markers,
-	scales=10
+        positions=positions+np.array([500, 0, 0]),
+        colors=colors,
+        # edge_width = .1,
+        edge_width=np.random.uniform(size=positions.shape[0]),
+        edge_color=[255, 255, 255],
+        marker=markers,
+        scales=10
 )
 # lines_actor = actor.line(edgesPositions,
 #                          colors=edgesColors,

@@ -31,11 +31,10 @@ class FurySuperNode:
         self._marker_is_uniform = isinstance(marker, str)
         self._marker = marker if self._marker_is_uniform else None
 
-        self._edge_width_is_uniform = True 
         self._edge_color_is_uniform = True 
         self._edge_opacity_is_uniform = True 
         self._marker_opacity_is_uniform = True 
-        # self._edge_width_is_uniform = isinstance(edge_width, float)
+        self._edge_width_is_uniform = isinstance(edge_width, float)
         # self._edge_color_is_uniform = len(edge_color) == 3
         self._positions_is_uniform = False
 
@@ -101,7 +100,7 @@ class FurySuperNode:
             list_of_markers = np.repeat(list_of_markers, 4).astype('float')
             attribute_to_actor(
                 self.vtk_actor,
-                list_of_markers, 'marker')
+                list_of_markers, 'vMarker')
 
     def _init_edge_color_property(self, edge_color):
         # if self._edge_color_is_uniform:
@@ -116,9 +115,16 @@ class FurySuperNode:
         #         edge_colors, 'edgeColor')
 
     def _init_edge_width_property(self, edge_width):
-        self.uniforms_list.append(
-            Uniform(
-                name='edgeWidth', uniform_type='f', value=edge_width))
+        if self._edge_width_is_uniform:
+            self.uniforms_list.append(
+                Uniform(
+                    name='edgeWidth', uniform_type='f', value=edge_width))
+        else:
+            edge_width_by_vertex = np.repeat(edge_width, 4).astype('float')
+            attribute_to_actor(
+                self.vtk_actor,
+                edge_width_by_vertex,
+                'vEdgeWidth')
 
     def _init_edge_opacity_property(self, opacity):
         self.uniforms_list.append(
@@ -135,18 +141,20 @@ class FurySuperNode:
         shader = load("billboard_dec.vert")
         if not self._marker_is_3d and not self._marker_is_uniform:
             shader += """
-                    //in float edgeWidth;
-                    in float marker;
-                    out float vMarker;"""
+                    in float vMarker;
+                    out float marker;"""
+        if not self._edge_width_is_uniform:
+            shader += 'in float vEdgeWidth; out float edgeWidth;'
+
         return shader
 
     @property
     def shader_impl_vert(self):
         shader = load("billboard_impl.vert")
         if not self._marker_is_3d and not self._marker_is_uniform:
-            shader += """
-                vMarker = marker;
-                //vMarkerOpacity = markerOpacity;"""
+            shader += "marker = vMarker;"
+        if not self._edge_width_is_uniform:
+            shader += 'edgeWidth = vEdgeWidth;'
 
         return shader
 
@@ -159,12 +167,14 @@ class FurySuperNode:
             shader += "uniform float edgeOpacity;"
         if self._edge_width_is_uniform: 
             shader += "uniform float edgeWidth;"
+        else:
+            shader += 'in float edgeWidth;'
         if self._edge_color_is_uniform:
             shader += "uniform vec3 edgeColor;"
         if self._marker_is_uniform:
             shader += "uniform float marker;"
         else:
-            shader += "in float vMarker;"
+            shader += "in float marker;"
 
         shader += """
             uniform mat4 MCDCMatrix;
@@ -228,12 +238,8 @@ class FurySuperNode:
         float len = length(point);
         float radius = 1.;
         float s = 0.5;
+        vec3 result = getDistFunc(point.xy, s, edgeWidth, marker);
         """
-        if self._marker_is_uniform:
-            shader += "vec3 result = getDistFunc(point.xy, s, edgeWidth, marker);"
-        else:
-            shader += "vec3 result = getDistFunc(point.xy, s, edgeWidth, vMarker);"
-
         shader += """
             float sdf = result.x;
             float minSdf = result.y;
