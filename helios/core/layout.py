@@ -1,6 +1,7 @@
 from abc import ABC, ABCMeta, abstractmethod
 import numpy as np
 
+
 class NetworkLayout(ABC):
     def __init__(self, network, *args, positions = None, **kargs):
         self.network = network
@@ -25,14 +26,6 @@ class NetworkLayout(ABC):
     @property
     def dimensions(self):
         return 3
-      
-class NetworkActor(...):
-    @property
-    def actors(self):
-        return [self.nodes, self.edges]
-
-    # updateCallback
-
 
 
 class NetworkLayoutAsync(NetworkLayout, metaclass=ABCMeta):
