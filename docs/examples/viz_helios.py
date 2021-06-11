@@ -81,6 +81,7 @@ edgesColors = np.average(np.array(edgesColors), axis=1)
 citation_network_3d = FurySuperActorNetwork(
 	positions=positions,
 	colors=colors,
+	scales=5,
 	marker='3d'
 )
 print(positions.min(), positions.max())
