@@ -91,7 +91,6 @@ class FurySuperNode:
             'o': 0, 's': 1, 'd': 2, '3d':0}
 
         if self._marker_is_uniform:
-            print('creating an uniform')
             marker_value = marker2id[marker]
             self.uniforms_list.append(
                 Uniform(
@@ -188,25 +187,24 @@ class FurySuperNode:
             };
             vec3 getDistFunc1(vec2 p, float s, float edgeWidth){
                 //square sdf func
-                float  sdf = 0;
-                float minSdf = 0;
-
                 edgeWidth = edgeWidth/2.;
-                minSdf = 0.5;
-                sdf = -length(p) + s;
+                float minSdf = 0.5/2.0;
+                vec2 d = abs(p) - vec2(s, s);
+                float sdf = -length(max(d,0.0)) - min(max(d.x,d.y),0.0);
 
                 vec3 result = vec3(sdf, minSdf, edgeWidth);
                 return result ;
             };
             vec3 getDistFunc2(vec2 p, float s, float edgeWidth){
                 //diamond sdf func
-                float  sdf = 0;
-                float minSdf = 0;
 
-                edgeWidth = edgeWidth/2.;
-                minSdf = 0.5/2.0;
-                vec2 d = abs(p) - vec2(s, s);
-                sdf = -length(max(d,0.0)) - min(max(d.x,d.y),0.0);
+               edgeWidth = edgeWidth/4.;
+               float minSdf = 0.5/2.0;
+                vec2 b  = vec2(s, s/2.0);
+                vec2 q = abs(p);
+                float h = clamp((-2.0*ndot(q,b)+ndot(b,b))/dot(b,b),-1.0,1.0);
+                float d = length( q - 0.5*b*vec2(1.0-h,1.0+h) );
+                float sdf = -d * sign( q.x*b.y + q.y*b.x - b.x*b.y );
 
                 vec3 result = vec3(sdf, minSdf, edgeWidth);
                 return result ;
