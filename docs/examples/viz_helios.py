@@ -41,13 +41,18 @@ edges = np.loadtxt(pjoin(folder, edges_file), dtype=int)
 category2index = {category: i
                   for i, category in enumerate(np.unique(categories))}
 
+
 index2category = np.unique(categories)
 
 categoryColors = cmap.distinguishable_colormap(nb_colors=len(index2category))
 
+categoryMarkers = ['o', 's', 'd']
+
 colors = np.array([categoryColors[category2index[category]]
                    for category in categories])
 
+markers = [categoryMarkers[category2index[category]]
+                   for category in categories]
 ###############################################################################
 # We define our node size
 
@@ -73,10 +78,19 @@ edgesColors = np.average(np.array(edgesColors), axis=1)
 # lines_actor for the edges.
 
 
-citation_network = FurySuperActorNetwork(
+citation_network_3d = FurySuperActorNetwork(
 	positions=positions,
 	colors=colors,
-	marker='o'
+	marker='3d'
+)
+print(positions.min(), positions.max())
+citation_network_symbols = FurySuperActorNetwork(
+	positions=positions+np.array([500, 0, 0]),
+	colors=colors,
+	edge_width = .1,
+	edge_color=[255, 255, 255],
+	marker= markers,
+	scales=10
 )
 # lines_actor = actor.line(edgesPositions,
 #                          colors=edgesColors,
@@ -90,7 +104,8 @@ citation_network = FurySuperActorNetwork(
 scene = window.Scene()
 
 # scene.add(lines_actor)
-scene.add(citation_network.nodes.vtk_actor)
+scene.add(citation_network_3d.nodes.vtk_actor)
+scene.add(citation_network_symbols.nodes.vtk_actor)
 
 ###############################################################################
 # The final step ! Visualize and save the result of our creation! Please,
