@@ -399,10 +399,10 @@ class FurySuperEdge:
         edges,
         positions,
         colors,
+        opacity=.5,
+        line_width=3,
         lod=False,
         fake_tube=False,
-        line_width=3,
-        opacity=.5
     ):
 
         self.edges = edges
