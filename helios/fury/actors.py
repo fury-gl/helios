@@ -415,7 +415,7 @@ class FurySuperActorNetwork:
     def __init__(
         self,
         positions,
-        edges,
+        edges=None,
         colors=(0, 1, 0),
         scales=1,
         marker='o',
@@ -437,11 +437,17 @@ class FurySuperActorNetwork:
             edge_color=node_edge_color,
             marker_opacity=node_opacity
         )
-        self.edges = FurySuperEdge(
-            edges, positions, edge_line_color, opacity=edge_line_opacity,
-            line_width=edge_line_width)
 
-        self.vtk_actors = [self.nodes.vtk_actor, self.edges.vtk_actor]
+        self.vtk_actors = [self.nodes.vtk_actor]
+
+        if edges is not None:
+            edges = FurySuperEdge(
+                edges, positions, edge_line_color, opacity=edge_line_opacity,
+                line_width=edge_line_width)
+
+            self.vtk_actors += +[edges.vtk_actor]
+
+        self.edges = edges
 
     @property
     def positions(self):
@@ -450,7 +456,8 @@ class FurySuperActorNetwork:
     @positions.setter
     def positions(self, data):
         self.nodes.positions = data
-        self.edges.positions = data
+        if self.edges is not None:
+            self.edges.positions = data
 
     def update(self):
         for actor in self.vtk_actors:
