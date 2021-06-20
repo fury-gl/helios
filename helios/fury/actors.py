@@ -4,6 +4,7 @@ import fury.primitive as fp
 from fury.utils import get_actor_from_primitive
 from fury.utils import vertices_from_actor, array_from_actor
 from fury.utils import update_actor
+from fury.actor import line as line_actor
 
 import numpy as np
 
@@ -19,6 +20,7 @@ class FurySuperNode:
         marker='3d',
         edge_width=.0,
         edge_color=(255, 255, 255),
+        marker_opacity=.8,
     ):
         self._vcount = positions.shape[0]
         self._composed_by_superactors = False
@@ -46,7 +48,7 @@ class FurySuperNode:
         self._init_edge_width_property(edge_width)
         self._init_edge_color_property(edge_color)
         self._init_edge_opacity_property(1)
-        self._init_marker_opacity_property(1)
+        self._init_marker_opacity_property(marker_opacity)
 
         if len(self.uniforms_list) > 0:
             self.Uniforms = Uniforms(self.uniforms_list)
@@ -372,15 +374,58 @@ class FurySuperNode:
         return f'FurySuperActorNode num_nodes {self._vcount}'
 
 
+class FurySuperEdge:
+    def __init__(
+        self,
+        edges,
+        positions,
+        colors,
+        lod=False,
+        fake_tube=False,
+        line_width=3,
+        opacity=.5
+    ):
+
+        self.edges = edges
+        self._num_edges = len(self.edges)
+        self.vtk_actor = line_actor(
+            np.zeros((self._num_edges, 2, 3)),
+            colors=colors, lod=lod,
+            fake_tube=fake_tube, linewidth=line_width,
+            opacity=opacity
+        )
+        self.positions = positions
+
+    @property
+    def positions(self):
+        pass
+
+    @positions.setter
+    def positions(self, positions):
+        """positions never it's a uniform variable
+        """
+        # avoids memory corruption
+        edges_positions = vertices_from_actor(self.vtk_actor)
+        edges_positions[::2] = positions[self.edges[:, 0]]
+        edges_positions[1::2] = positions[self.edges[:, 1]]
+        update_actor(self.vtk_actor)
+
+
 class FurySuperActorNetwork:
     def __init__(
         self,
         positions,
+        edges,
         colors=(0, 1, 0),
         scales=1,
         marker='o',
-        edge_width=.0,
-        edge_color=(255, 255, 255),
+        node_edge_width=.0,
+        node_opacity=.8,
+        node_edge_color=(255, 255, 255),
+        edge_line_color=(1, 1, 1),
+        edge_line_opacity=.1,
+        edge_line_width=.8,
+
     ):
         self._composed_by_superactors = True
         self.nodes = FurySuperNode(
@@ -388,12 +433,15 @@ class FurySuperActorNetwork:
             colors=colors,
             scales=scales,
             marker=marker,
-            edge_width=edge_width,
-            edge_color=edge_color
+            edge_width=node_edge_width,
+            edge_color=node_edge_color,
+            marker_opacity=node_opacity
         )
-        # self.edges = FurySuperEdges(positions, ...)
+        self.edges = FurySuperEdge(
+            edges, positions, edge_line_color, opacity=edge_line_opacity,
+            line_width=edge_line_width)
 
-        self.vtk_actors = [self.nodes.vtk_actor, ]
+        self.vtk_actors = [self.nodes.vtk_actor, self.edges.vtk_actor]
 
     @property
     def positions(self):
@@ -402,7 +450,8 @@ class FurySuperActorNetwork:
     @positions.setter
     def positions(self, data):
         self.nodes.positions = data
-        # self.edges.positions = data
+        self.edges.positions = data
 
     def update(self):
-        update_actor(self.nodes.vtk_actor)
+        for actor in self.vtk_actors:
+            update_actor(actor)
