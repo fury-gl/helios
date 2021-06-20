@@ -2,8 +2,8 @@ from fury.shaders import add_shader_callback, attribute_to_actor
 from fury.shaders import shader_to_actor, load
 import fury.primitive as fp
 from fury.utils import get_actor_from_primitive
-from fury.utils import (vertices_from_actor, array_from_actor,
-    update_actor )
+from fury.utils import vertices_from_actor, array_from_actor
+from fury.utils import update_actor
 
 import numpy as np
 
@@ -359,7 +359,7 @@ class FurySuperNode:
     def positions(self, positions):
         """positions never it's a uniform variable
         """
-        # avoids memory corruption 
+        # avoids memory corruption
         self.centers_geo[:] = np.repeat(
             positions, self.centers_length, axis=0).astype('float64')
         self.verts_geo[:] = self.verts_geo_orig + self.centers_geo
@@ -403,3 +403,6 @@ class FurySuperActorNetwork:
     def positions(self, data):
         self.nodes.positions = data
         # self.edges.positions = data
+
+    def update(self):
+        update_actor(self.nodes.vtk_actor)
