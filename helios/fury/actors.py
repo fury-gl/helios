@@ -1,14 +1,13 @@
-from helios.fury.tools import Uniform, Uniforms
 from fury.shaders import add_shader_callback, attribute_to_actor
 from fury.shaders import shader_to_actor, load
 import fury.primitive as fp
 from fury.utils import get_actor_from_primitive
 from fury.utils import (vertices_from_actor, array_from_actor,
-    update_actor, compute_bounds)
+    update_actor )
 
 import numpy as np
-from vtk.util import numpy_support
 
+from helios.fury.tools import Uniform, Uniforms
 
 
 class FurySuperNode:
@@ -31,14 +30,14 @@ class FurySuperNode:
         self._marker_is_uniform = isinstance(marker, str)
         self._marker = marker if self._marker_is_uniform else None
 
-        self._edge_color_is_uniform = True 
-        self._edge_opacity_is_uniform = True 
-        self._marker_opacity_is_uniform = True 
-        self._edge_width_is_uniform = isinstance(edge_width, float)
+        self._edge_color_is_uniform = True
+        self._edge_opacity_is_uniform = True
+        self._marker_opacity_is_uniform = True
+        self._edge_width_is_uniform = isinstance(edge_width, (float, int))
         # self._edge_color_is_uniform = len(edge_color) == 3
         self._positions_is_uniform = False
 
-        self.vtk_actor = self._init_actor(
+        self._init_actor(
             positions, colors, scales)
 
         self.uniforms_list = []
@@ -49,27 +48,18 @@ class FurySuperNode:
         self._init_edge_opacity_property(1)
         self._init_marker_opacity_property(1)
 
-        self.uniforms_list.append(
-           Uniform(
-                name='edgeOpacity', uniform_type='f', value=1))
-        self.uniforms_list.append(
-           Uniform(
-                name='markerOpacity', uniform_type='f', value=1))
-
         if len(self.uniforms_list) > 0:
             self.Uniforms = Uniforms(self.uniforms_list)
             self.uniforms_observerId = add_shader_callback(
                     self.vtk_actor, self.Uniforms)
 
-            self._init_shader_frag()
+        self._init_shader_frag()
 
-    def update(self):
-        """Force actor update
-        """
-        update_actor(self.vtk_actor)
-        compute_bounds(self.vtk_actor)
+    def _init_actor(self, positions, colors, scales):
 
-    def _init_actor(self, centers, colors, scales):
+        # to avoid memory corruption
+        centers = np.zeros_like(positions)
+
         verts, faces = fp.prim_square()
         res = fp.repeat_primitive(
             verts, faces, centers=centers,
@@ -77,17 +67,27 @@ class FurySuperNode:
             scales=scales)
 
         big_verts, big_faces, big_colors, big_centers = res
-        sq_actor = get_actor_from_primitive(
+        actor = get_actor_from_primitive(
             big_verts, big_faces, big_colors)
-        sq_actor.GetMapper().SetVBOShiftScaleMethod(False)
-        sq_actor.GetProperty().BackfaceCullingOff()
+        actor.GetMapper().SetVBOShiftScaleMethod(False)
+        actor.GetProperty().BackfaceCullingOff()
 
-        attribute_to_actor(sq_actor, big_centers, 'center')
-        return sq_actor
+        attribute_to_actor(actor, big_centers, 'center')
+
+        self.centers_geo = array_from_actor(actor, array_name="center")
+        self.centers_geo_orig = np.array(self.centers_geo)
+        self.centers_length = self.centers_geo.shape[0] / positions.shape[0]
+
+        self.verts_geo = vertices_from_actor(actor)
+        self.verts_geo_orig = np.array(self.verts_geo)
+
+        self.vtk_actor = actor
+        # update to correct positions
+        self.positions = positions
 
     def _init_marker_property(self, marker):
         marker2id = {
-            'o': 0, 's': 1, 'd': 2, '3d':0}
+            'o': 0, 's': 1, 'd': 2, '3d': 0}
 
         if self._marker_is_uniform:
             marker_value = marker2id[marker]
@@ -107,12 +107,6 @@ class FurySuperNode:
         self.uniforms_list.append(
             Uniform(
                 name='edgeColor', uniform_type='3f', value=edge_color))
-        # else:
-        #     edge_colors = np.repeat(
-        #        edge_color, 4).astype('float')
-        #     attribute_to_actor(
-        #         self.vtk_actor,
-        #         edge_colors, 'edgeColor')
 
     def _init_edge_width_property(self, edge_width):
         if self._edge_width_is_uniform:
@@ -165,7 +159,7 @@ class FurySuperNode:
             shader += "uniform float markerOpacity;"
         if self._edge_opacity_is_uniform:
             shader += "uniform float edgeOpacity;"
-        if self._edge_width_is_uniform: 
+        if self._edge_width_is_uniform:
             shader += "uniform float edgeWidth;"
         else:
             shader += 'in float edgeWidth;'
@@ -182,7 +176,7 @@ class FurySuperNode:
 
             float ndot(vec2 a, vec2 b ) {
                 return a.x*b.x - a.y*b.y;
-            };
+            }
             vec3 getDistFunc0(vec2 p, float s, float edgeWidth){
                 //circle or sphere sdf func
                 float  sdf = 0;
@@ -194,7 +188,7 @@ class FurySuperNode:
 
                 vec3 result = vec3(sdf, minSdf, edgeWidth);
                 return result ;
-            };
+            }
             vec3 getDistFunc1(vec2 p, float s, float edgeWidth){
                 //square sdf func
                 edgeWidth = edgeWidth/2.;
@@ -204,7 +198,7 @@ class FurySuperNode:
 
                 vec3 result = vec3(sdf, minSdf, edgeWidth);
                 return result ;
-            };
+            }
             vec3 getDistFunc2(vec2 p, float s, float edgeWidth){
                 //diamond sdf func
 
@@ -218,7 +212,7 @@ class FurySuperNode:
 
                 vec3 result = vec3(sdf, minSdf, edgeWidth);
                 return result ;
-            };
+            }
             vec3 getDistFunc(vec2 p, float s, float edgeWidth, float marker){
                 if (marker == 0.){
                     return getDistFunc0(p, s, edgeWidth);
@@ -294,8 +288,8 @@ class FurySuperNode:
         else:
             shader += """
                 vec4 rgba = vec4(  color, markerOpacity );
-                if (edgeWidthNew > 0.0){
-                if (sdf < edgeWidthNew)  rgba  = vec4(edgeColor, edgeOpacity);
+                if (0.1 > 0.0){
+                    if (sdf < 0.1)  rgba  = vec4(edgeColor, 1);
                 }
 
                 fragOutput0 = rgba;
@@ -352,17 +346,14 @@ class FurySuperNode:
         pass
 
     @positions.setter
-    def positions(self, pos):
+    def positions(self, positions):
         """positions never it's a uniform variable
         """
-        # spheres_positions = numpy_support.vtk_to_numpy(
-        #     self.vtk_actor.GetMapper().GetInput().GetPoints().GetData())
-        # spheres_positions[:] = self.sphere_geometry + \
-        #     np.repeat(pos, self.geometry_length, axis=0)
-
-        # self.vtk_actor.GetMapper().GetInput().GetPoints().GetData().Modified()
-        # self.vtk_actor.GetMapper().GetInput().ComputeBounds()
-        # pass
+        # avoids memory corruption 
+        self.centers_geo[:] = np.repeat(
+            positions, self.centers_length, axis=0).astype('float64')
+        self.verts_geo[:] = self.verts_geo_orig + self.centers_geo
+        update_actor(self.vtk_actor)
 
     def __str__(self):
         return f'FurySuperActorNode num_nodes {self._vcount}'
