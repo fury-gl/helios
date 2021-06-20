@@ -90,13 +90,15 @@ class HeliosFr:
             if ms < self.update_interval_workers:
                 ms = self.update_interval_workers
 
-            def update_fury_positions():
-                self.super_actor.positions = self.positions
-                self.super_actor.update()
-                self.showm.window.Render()
+            def callback():
+                self.update_in_vtk()
             self._interval_timer = IntervalTimer(
-                    ms/1000,
-                    update_fury_positions)
+                    ms/1000, callback)
+
+    def update_in_vtk(self):
+        self.super_actor.positions = self.positions
+        self.super_actor.update()
+        self.showm.window.Render()
 
     def stop(self):
         if not self._started:
