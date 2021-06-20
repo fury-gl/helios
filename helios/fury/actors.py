@@ -378,7 +378,7 @@ class FurySuperNode:
         Parameters
         ----------
 
-        new_colors : ndarray N,3 uint8
+        new_colors : ndarray N,3 uint8  
         """
         self.colors_geo[:] = np.repeat(
             new_colors, self.centers_length, axis=0)
@@ -414,6 +414,7 @@ class FurySuperEdge:
             opacity=opacity
         )
         self.positions = positions
+        self.colors_geo = array_from_actor(self.vtk_actor, array_name="colors")
 
     @property
     def positions(self):
@@ -427,6 +428,23 @@ class FurySuperEdge:
         edges_positions = vertices_from_actor(self.vtk_actor)
         edges_positions[::2] = positions[self.edges[:, 0]]
         edges_positions[1::2] = positions[self.edges[:, 1]]
+        update_actor(self.vtk_actor)
+
+    @property
+    def colors(self):
+        return self.colors_geo
+
+    @colors.setter
+    def colors(self, new_colors):
+        """
+        Parameters
+        ----------
+
+        new_colors : ndarray N,3 uint8  
+        """
+        self.colors_geo[:] = new_colors
+
+    def update(self):
         update_actor(self.vtk_actor)
 
 
@@ -443,7 +461,7 @@ class FurySuperActorNetwork:
         node_edge_color=(255, 255, 255),
         edge_line_color=(1, 1, 1),
         edge_line_opacity=.5,
-        edge_line_width=.8,
+        edge_line_width=1,
 
     ):
         self._composed_by_superactors = True
