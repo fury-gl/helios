@@ -79,9 +79,10 @@ class FurySuperNode:
         self.centers_geo = array_from_actor(actor, array_name="center")
         self.centers_geo_orig = np.array(self.centers_geo)
         self.centers_length = self.centers_geo.shape[0] / positions.shape[0]
-
         self.verts_geo = vertices_from_actor(actor)
         self.verts_geo_orig = np.array(self.verts_geo)
+
+        self.colors_geo = array_from_actor(actor, array_name="colors")
 
         self.vtk_actor = actor
         # update to correct positions
@@ -365,6 +366,24 @@ class FurySuperNode:
         self.centers_geo[:] = np.repeat(
             positions, self.centers_length, axis=0).astype('float64')
         self.verts_geo[:] = self.verts_geo_orig + self.centers_geo
+        update_actor(self.vtk_actor)
+
+    @property
+    def colors(self):
+        pass
+
+    @colors.setter
+    def colors(self, new_colors):
+        """
+        Parameters
+        ----------
+
+        new_colors : ndarray N,3 uint8
+        """
+        self.colors_geo[:] = np.repeat(
+            new_colors, self.centers_length, axis=0)
+
+    def update(self):
         update_actor(self.vtk_actor)
 
     def __str__(self):
