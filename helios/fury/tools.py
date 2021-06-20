@@ -1,10 +1,3 @@
-def camel2snake(s):
-    '''Inside the shaders we use the C++ style and because of that
-    we need to convert the Camel Case pattern to snake'''
-    return ''.join(
-        ['_'+c.lower() if c.isupper() else c for c in s]).lstrip('_')
-
-
 class Uniform:
     def __init__(self, name, uniform_type, value):
         """This is used for Uniforms. It's responsible to
@@ -52,6 +45,9 @@ class Uniform:
         program.__getattribute__(self.vtk_func_uniform)(
                 self.name, self.value)
 
+    def __repr__(self):
+        return f'Uniform(name={self.name}, value={self.value})'
+
 
 class Uniforms:
     def __init__(self, uniforms):
@@ -75,8 +71,8 @@ class Uniforms:
         """
         self.uniforms = uniforms
         for obj in self.uniforms:
-            if isinstance(obj, Uniform) is False:
-                raise ValueError(f"""{obj} it's not an Uniform object""")
+            # if isinstance(obj, Uniform) is False:
+            #    raise ValueError(f"""{obj} it's not an Uniform object""")
 
             setattr(self, obj.name, obj)
 
@@ -90,3 +86,6 @@ class Uniforms:
 
         for uniform in self.uniforms:
             uniform.execute_program(program)
+
+    def __repr__(self):
+        return f'Uniforms({[obj.name for obj in self.uniforms]})'

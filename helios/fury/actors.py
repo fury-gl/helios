@@ -288,8 +288,8 @@ class FurySuperNode:
         else:
             shader += """
                 vec4 rgba = vec4(  color, markerOpacity );
-                if (0.1 > 0.0){
-                    if (sdf < 0.1)  rgba  = vec4(edgeColor, 1);
+                if (edgeWidthNew > 0.0){
+                    if (sdf < edgeWidthNew)  rgba  = vec4(edgeColor, 1);
                 }
 
                 fragOutput0 = rgba;
@@ -323,7 +323,7 @@ class FurySuperNode:
     @edge_width.setter
     def edge_width(self, data):
         if self._edge_width_is_uniform:
-            self.Uniforms.edgeWidth = data
+            self.Uniforms.edgeWidth.value = data
 
     @property
     def marker(self):
@@ -339,8 +339,18 @@ class FurySuperNode:
 
     @edge_color.setter
     def edge_color(self, data):
+        if self._edge_color_is_uniform:
+            self.Uniforms.edgeColor.value = data
+
+    @property
+    def marker_opacity(self):
         pass
-    
+
+    @marker_opacity.setter
+    def marker_opacity(self, data):
+        if self._marker_opacity_is_uniform:
+            self.Uniforms.markerOpacity.value = data
+
     @property
     def positions(self):
         pass
