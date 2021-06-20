@@ -423,7 +423,7 @@ class FurySuperActorNetwork:
         node_opacity=.8,
         node_edge_color=(255, 255, 255),
         edge_line_color=(1, 1, 1),
-        edge_line_opacity=.1,
+        edge_line_opacity=.5,
         edge_line_width=.8,
 
     ):
@@ -445,7 +445,7 @@ class FurySuperActorNetwork:
                 edges, positions, edge_line_color, opacity=edge_line_opacity,
                 line_width=edge_line_width)
 
-            self.vtk_actors += +[edges.vtk_actor]
+            self.vtk_actors += [edges.vtk_actor]
 
         self.edges = edges
 
