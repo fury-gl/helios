@@ -56,6 +56,9 @@ class FurySuperNode:
         self._init_edge_color_property(edge_color)
         self._init_edge_opacity_property(edge_opacity)
         self._init_marker_opacity_property(marker_opacity)
+        self._init_specular_strength_property(25)
+        self._init_specular_mix_property(1.)
+        self._init_shadow_mix_property(0.25)
 
         if len(self.uniforms_list) > 0:
             self.Uniforms = Uniforms(self.uniforms_list)
@@ -195,6 +198,24 @@ class FurySuperNode:
             self._marker_opacity = array_from_actor(
                 self.vtk_actor, array_name="vMarkerOpacity")
 
+    def _init_specular_strength_property(self, value):
+        if self._marker_opacity_is_uniform:
+            self.uniforms_list.append(
+                Uniform(
+                    name='specularStrength', uniform_type='f', value=value))
+
+    def _init_shadow_mix_property(self, value):
+        if self._marker_opacity_is_uniform:
+            self.uniforms_list.append(
+                Uniform(
+                    name='shadowMix', uniform_type='f', value=value))
+
+    def _init_specular_mix_property(self, value):
+        if self._marker_opacity_is_uniform:
+            self.uniforms_list.append(
+                Uniform(
+                    name='specularMix', uniform_type='f', value=value))
+
     @property
     def shader_dec_vert(self):
         shader = load("billboard_dec.vert")
@@ -252,6 +273,10 @@ class FurySuperNode:
             shader += "uniform float marker;\n"
         else:
             shader += "in float marker;\n"
+
+        shader += "uniform float specularStrength;\n"
+        shader += "uniform float specularMix;\n"
+        shader += "uniform float shadowMix;\n"
 
         shader += """
             uniform mat4 MCDCMatrix;
@@ -404,6 +429,7 @@ class FurySuperNode:
         shader = load("billboard_impl.frag")
 
         shader += """
+
         float len = length(point);
         float radius = 1.;
         float s = 0.5;
@@ -422,7 +448,7 @@ class FurySuperNode:
             float d = sqrt(1. - len*len);
 
             /* Calculating the normal as if we had a sphere of radius len*/
-            vec3 normalizedPoint = normalize(vec3(point.xy, d));
+            vec3 normalizedPoint = normalize(vec3(point.xy, sdf));
 
             /* Defining a fixed light direction */
             vec3 direction = normalize(vec3(1., 1., 1.));
@@ -431,7 +457,7 @@ class FurySuperNode:
             float ddf = max(0, dot(direction, normalizedPoint));
 
             /* Calculating specular */
-            float ssf = pow(ddf, 24);
+            float ssf = pow(ddf, specularStrength);
 
             /* Obtaining the two clipping planes for depth buffer */
             float far = gl_DepthRange.far;
@@ -458,9 +484,9 @@ class FurySuperNode:
             gl_FragDepth = depth;
 
             /* Calculating colors based on a fixed light */
-            color = max(color*0.5+ddf * color, ssf * vec3(1));
+            color = max(color*shadowMix+ddf * color, ssf * vec3(specularMix));
             """
-  
+ 
         shader += """
             vec4 rgba = vec4(  color, markerOpacity );
             if (edgeWidthNew > 0.0){
@@ -470,6 +496,7 @@ class FurySuperNode:
             }
 
             fragOutput0 = rgba;
+
         """
 
         return shader
@@ -553,6 +580,30 @@ class FurySuperNode:
                 data, self.centers_length, axis=0)
             self.update()
 
+    @property
+    def specular_strength(self):
+        pass
+
+    @specular_strength.setter
+    def specular_strength(self, data):
+        self.Uniforms.specularStrength.value = data
+
+    @property
+    def specular_mix(self):
+        pass
+
+    @specular_mix.setter
+    def specular_mix(self, data):
+        self.Uniforms.specularMix.value = data
+     
+    @property
+    def shadow_mix(self):
+        pass
+
+    @shadow_mix.setter
+    def shadow_mix(self, data):
+        self.Uniforms.shadowMix.value = data
+     
     @property
     def positions(self):
         pass
