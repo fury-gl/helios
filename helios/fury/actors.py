@@ -1,3 +1,4 @@
+import numpy as np
 from fury.shaders import add_shader_callback, attribute_to_actor
 from fury.shaders import shader_to_actor, load
 import fury.primitive as fp
@@ -5,8 +6,12 @@ from fury.utils import get_actor_from_primitive
 from fury.utils import vertices_from_actor, array_from_actor
 from fury.utils import update_actor
 from fury.actor import line as line_actor
+try:
+    from fury.shaders import shader_apply_effects
+except ImportError:
+    shader_apply_effects = None
 
-import numpy as np
+from fury import window
 
 from helios.fury.tools import Uniform, Uniforms
 
@@ -57,6 +62,32 @@ class FurySuperNode:
 
         self._init_shader_frag()
 
+        self.blending = 'additive'
+        self.depth_test = True
+        self._id_observer_effects = None
+
+    def start_effects(self, render_window):
+
+        if self._id_observer_effects is not None:
+            self.vtk_actor.GetMapper().RemoveObserver(
+                self._id_observer_effects)
+        effects = []
+        if self.depth_test:
+            effects += [window.gl_enable_depth]
+        else:
+            effects += [window.gl_disable_depth]
+        
+        blendings = {
+            'additive': window.gl_set_additive_blending,
+            'subtractive': window.gl_set_subtractive_blending,
+            'multiplicative': window.gl_set_multiplicative_blending,
+            'normal': window.gl_set_normal_blending,
+        }
+        effects += [blendings[self.blending]]
+        self._id_observer_effects = shader_apply_effects(
+            render_window, self.vtk_actor,
+            effects=effects)
+
     def _init_actor(self, positions, colors, scales):
 
         # to avoid memory corruption
@@ -82,7 +113,7 @@ class FurySuperNode:
         self.verts_geo = vertices_from_actor(actor)
         self.verts_geo_orig = np.array(self.verts_geo)
 
-        self.colors_geo = array_from_actor(actor, array_name="colors")
+        self._colors_geo = array_from_actor(actor, array_name="colors")
 
         self.vtk_actor = actor
         # update to correct positions
@@ -122,6 +153,8 @@ class FurySuperNode:
                 self.vtk_actor,
                 edge_width_by_vertex,
                 'vEdgeWidth')
+            self._edge_width = array_from_actor(
+                self.vtk_actor, array_name="vEdgeWidth")
 
     def _init_edge_opacity_property(self, opacity):
         self.uniforms_list.append(
@@ -327,6 +360,10 @@ class FurySuperNode:
     def edge_width(self, data):
         if self._edge_width_is_uniform:
             self.Uniforms.edgeWidth.value = data
+        else:
+            self._edge_width[:] = np.repeat(
+                data, self.centers_length, axis=0)
+            self.update()
 
     @property
     def marker(self):
@@ -366,7 +403,7 @@ class FurySuperNode:
         self.centers_geo[:] = np.repeat(
             positions, self.centers_length, axis=0).astype('float64')
         self.verts_geo[:] = self.verts_geo_orig + self.centers_geo
-        update_actor(self.vtk_actor)
+        self.update()
 
     @property
     def colors(self):
@@ -380,7 +417,7 @@ class FurySuperNode:
 
         new_colors : ndarray N,3 uint8  
         """
-        self.colors_geo[:] = np.repeat(
+        self._colors_geo[:] = np.repeat(
             new_colors, self.centers_length, axis=0)
 
     def update(self):
@@ -401,20 +438,51 @@ class FurySuperEdge:
         colors,
         opacity=.5,
         line_width=3,
+        depth_test=True,
+        blending='additive',
         lod=False,
         fake_tube=False,
     ):
 
         self.edges = edges
         self._num_edges = len(self.edges)
+       
         self.vtk_actor = line_actor(
             np.zeros((self._num_edges, 2, 3)),
-            colors=colors, lod=lod,
-            fake_tube=fake_tube, linewidth=line_width,
+            colors=colors, 
+            linewidth=line_width,
             opacity=opacity
         )
+        #self.vtk_actor.GetProperty().LightingOff()
+        #self.vtk_actor.GetProperty().ShadingOff()
         self.positions = positions
-        self.colors_geo = array_from_actor(self.vtk_actor, array_name="colors")
+        self._colors_geo = array_from_actor(self.vtk_actor, array_name="colors")
+
+        self.blending = blending
+        self.depth_test = True
+        self._id_observer_effects = None
+
+    def start_effects(self, render_window):
+
+        if self._id_observer_effects is not None:
+            self.vtk_actor.GetMapper().RemoveObserver(
+                self._id_observer_effects)
+        effects = [window.gl_enable_blend]
+        if self.depth_test:
+            effects += [window.gl_enable_depth]
+        else:
+            effects += [window.gl_disable_depth]
+        
+        blendings = {
+            'additive': window.gl_set_additive_blending,
+            'subtractive': window.gl_set_subtractive_blending,
+            'multiplicative': window.gl_set_multiplicative_blending,
+            'normal': window.gl_set_normal_blending,
+        }
+        effects += [blendings[self.blending]]
+        self._id_observer_effects = shader_apply_effects(
+            render_window, self.vtk_actor,
+            effects=effects)
 
     @property
     def positions(self):
@@ -432,7 +500,7 @@ class FurySuperEdge:
 
     @property
     def colors(self):
-        return self.colors_geo
+        return self._colors_geo
 
     @colors.setter
     def colors(self, new_colors):
@@ -440,9 +508,9 @@ class FurySuperEdge:
         Parameters
         ----------
 
-        new_colors : ndarray N,3 uint8  
+        new_colors : ndarray N,3 uint8 
         """
-        self.colors_geo[:] = new_colors
+        self._colors_geo[:] = new_colors
 
     def update(self):
         update_actor(self.vtk_actor)
