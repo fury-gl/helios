@@ -458,19 +458,19 @@ class FurySuperNode:
             gl_FragDepth = depth;
 
             /* Calculating colors based on a fixed light */
-            fragOutput0 = vec4(max(color*0.5+ddf * color, ssf * vec3(1)), markerOpacity);
+            color = max(color*0.5+ddf * color, ssf * vec3(1));
             """
-        else:
-            shader += """
-                vec4 rgba = vec4(  color, markerOpacity );
-                if (edgeWidthNew > 0.0){
-                    if (sdf < edgeWidthNew) {
-                        rgba = vec4(edgeColor, edgeOpacity);
-                    }
+  
+        shader += """
+            vec4 rgba = vec4(  color, markerOpacity );
+            if (edgeWidthNew > 0.0){
+                if (sdf < edgeWidthNew) {
+                    rgba = vec4(edgeColor, edgeOpacity);
                 }
+            }
 
-                fragOutput0 = rgba;
-            """
+            fragOutput0 = rgba;
+        """
 
         return shader
 
