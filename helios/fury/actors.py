@@ -123,8 +123,8 @@ class FurySuperNode:
 
     def _init_marker_property(self, marker):
         marker2id = {
-            'o': 0, 's': 1, 'd': 2, '3d': 0}
-
+            'o': 0, 's': 1, 'd': 2, '^': 3, 'p': 4,
+            'h': 5, 's6': 6, 'x': 7, '+': 8, '3d': 0}
         if self._marker_is_uniform:
             marker_value = marker2id[marker]
             self.uniforms_list.append(
@@ -200,16 +200,16 @@ class FurySuperNode:
         shader = load("billboard_dec.vert")
         if not self._marker_is_3d and not self._marker_is_uniform:
             shader += """
-                    in float vMarker;
-                    out float marker;"""
+                    in float vMarker;\n
+                    out float marker;\n"""
         if not self._edge_width_is_uniform:
-            shader += 'in float vEdgeWidth; out float edgeWidth;'
+            shader += 'in float vEdgeWidth; \nout float edgeWidth;\n'
         if not self._edge_color_is_uniform:
-            shader += 'in vec3 vEdgeColor; out vec3 edgeColor;'
+            shader += 'in vec3 vEdgeColor;\n out vec3 edgeColor;\n'
         if not self._edge_opacity_is_uniform:
-            shader += 'in float vEdgeOpacity; out float edgeOpacity;'
+            shader += 'in float vEdgeOpacity;\n out float edgeOpacity;\n'
         if not self._marker_opacity_is_uniform:
-            shader += 'in float vMarkerOpacity; out float markerOpacity;'
+            shader += 'in float vMarkerOpacity;\n out float markerOpacity;\n'
 
         return shader
 
@@ -217,15 +217,15 @@ class FurySuperNode:
     def shader_impl_vert(self):
         shader = load("billboard_impl.vert")
         if not self._marker_is_3d and not self._marker_is_uniform:
-            shader += "marker = vMarker;"
+            shader += "marker = vMarker;\n"
         if not self._edge_width_is_uniform:
-            shader += 'edgeWidth = vEdgeWidth;'
+            shader += 'edgeWidth = vEdgeWidth;\n'
         if not self._edge_width_is_uniform:
-            shader += 'edgeColor = vEdgeColor;'
+            shader += 'edgeColor = vEdgeColor;\n'
         if not self._edge_opacity_is_uniform:
-            shader += 'edgeOpacity = vEdgeOpacity;'
+            shader += 'edgeOpacity = vEdgeOpacity;\n'
         if not self._edge_opacity_is_uniform:
-            shader += 'markerOpacity = vMarkerOpacity;'
+            shader += 'markerOpacity = vMarkerOpacity;\n'
 
         return shader
 
@@ -233,25 +233,25 @@ class FurySuperNode:
     def shader_dec_frag(self):
         shader = load("billboard_dec.frag")
         if self._marker_opacity_is_uniform:
-            shader += "uniform float markerOpacity;"
+            shader += "uniform float markerOpacity;\n"
         else:
-            shader += 'in float markerOpacity;'
+            shader += 'in float markerOpacity;\n'
         if self._edge_opacity_is_uniform:
-            shader += "uniform float edgeOpacity;"
+            shader += "uniform float edgeOpacity;\n"
         else:
-            shader += 'in float edgeOpacity;'
+            shader += 'in float edgeOpacity;\n'
         if self._edge_width_is_uniform:
-            shader += "uniform float edgeWidth;"
+            shader += "uniform float edgeWidth;\n"
         else:
-            shader += 'in float edgeWidth;'
+            shader += 'in float edgeWidth;\n'
         if self._edge_color_is_uniform:
-            shader += "uniform vec3 edgeColor;"
+            shader += "uniform vec3 edgeColor;\n"
         else:
-            shader += 'in vec3 edgeColor;'
+            shader += 'in vec3 edgeColor;\n'
         if self._marker_is_uniform:
-            shader += "uniform float marker;"
+            shader += "uniform float marker;\n"
         else:
-            shader += "in float marker;"
+            shader += "in float marker;\n"
 
         shader += """
             uniform mat4 MCDCMatrix;
@@ -296,15 +296,107 @@ class FurySuperNode:
                 vec3 result = vec3(sdf, minSdf, edgeWidth);
                 return result ;
             }
-            vec3 getDistFunc(vec2 p, float s, float edgeWidth, float marker){
-                if (marker == 0.){
-                    return getDistFunc0(p, s, edgeWidth);
-                }else if  (marker == 1.){
-                    return getDistFunc1(p, s, edgeWidth);
-                }
-                return getDistFunc2(p, s, edgeWidth);
+
+            vec3 getDistFunc3(vec2 p, float s, float edgeWidth){
+                float l = s/1.5;
+                float minSdf = 1000.0;
+                float k = sqrt(3.0);
+                p.x = abs(p.x) - l;
+                p.y = p.y + l/k;
+                if( p.x+k*p.y>0.0 ) p = vec2(p.x-k*p.y,-k*p.x-p.y)/2.0;
+                p.x -= clamp( p.x, -2.0*l, 0.0 );
+                float sdf = length(p)*sign(p.y);
+                vec3 result = vec3(sdf, minSdf, edgeWidth);
+                return result ;
             }
+            vec3 getDistFunc4(vec2 p, float s, float edgeWidth){
+                edgeWidth = edgeWidth/4.;
+                float minSdf = 0.5/2.0;
+                float r = s/2.0;
+                const vec3 k = vec3(0.809016994,0.587785252,0.726542528);
+                p.x = abs(p.x);
+                p -= 2.0*min(dot(vec2(-k.x,k.y),p),0.0)*vec2(-k.x,k.y);
+                p -= 2.0*min(dot(vec2( k.x,k.y),p),0.0)*vec2( k.x,k.y);
+                p -= vec2(clamp(p.x,-r*k.z,r*k.z),r);
+                float sdf = -length(p)*sign(p.y);
+                vec3 result = vec3(sdf, minSdf, edgeWidth);
+                return result ;
+            }
+            vec3 getDistFunc5(vec2 p, float s, float edgeWidth){
+                edgeWidth = edgeWidth/4.;
+                float minSdf = 0.5/2.0;
+                float r = s/2.0;
+                const vec3 k = vec3(-0.866025404,0.5,0.577350269);
+                p = abs(p);
+                p -= 2.0*min(dot(k.xy,p),0.0)*k.xy;
+                p -= vec2(clamp(p.x, -k.z*r, k.z*r), r);
+                float sdf = -length(p)*sign(p.y);
+                vec3 result = vec3(sdf, minSdf, edgeWidth);
+                return result ;
+            }
+            vec3 getDistFunc6(vec2 p, float s, float edgeWidth){
+                float minSdf = 0.5/2.0;
+                edgeWidth = edgeWidth/4.;
+                float r = s/2.0;
+                const vec4 k = vec4(-0.5,0.8660254038,0.5773502692,1.7320508076);
+                p = abs(p);
+                p -= 2.0*min(dot(k.xy,p),0.0)*k.xy;
+                p -= 2.0*min(dot(k.yx,p),0.0)*k.yx;
+                p -= vec2(clamp(p.x,r*k.z,r*k.w),r);
+                float sdf = -length(p)*sign(p.y);
+                vec3 result = vec3(sdf, minSdf, edgeWidth);
+                return result ;
+            }
+            vec3 getDistFunc7(vec2 p, float s, float edgeWidth){
+                edgeWidth = edgeWidth/8.;
+                float minSdf = 0.5/4.0;
+                float r = s/4.0;
+                float w = 0.5;
+                p = abs(p);
+                float sdf = -length(p-min(p.x+p.y,w)*0.5) + r;
+                vec3 result = vec3(sdf, minSdf, edgeWidth);
+                return result ;
+            }
+            vec3 getDistFunc8(vec2 p, float s, float edgeWidth){
+                edgeWidth = edgeWidth/4.;
+                float minSdf = 0.5/2.0;
+                float r = s/15.0; //corner radius
+                vec2 b = vec2(s/1.0, s/3.0); //base , size
+                //vec2 b = vec2(r, r);
+                p = abs(p); p = (p.y>p.x) ? p.yx : p.xy;
+                vec2  q = p - b;
+                float k = max(q.y,q.x);
+                vec2  w = (k>0.0) ? q : vec2(b.y-p.x,-k);
+                float sdf = -sign(k)*length(max(w,0.0)) - r;
+                vec3 result = vec3(sdf, minSdf, edgeWidth);
+                return result ;
+            }
+            
             """
+        # shader += """
+        #     vec3 getDistFunc(vec2 p, float s, float edgeWidth, int marker){
+        #         vec3 result = vec3(0., 0., 0.);
+        #         switch (marker) {
+        #     """
+        # for i in range(0, 9):
+        #     shader += f"""
+        #         case {i}:
+        #             result = getDistFunc{i}(p, s, edgeWidth);
+        #             break;
+        #     """
+        dist_func_str = """
+            vec3 getDistFunc(vec2 p, float s, float edgeWidth, float marker){
+                vec3 result = vec3(0., 0., 0.);
+                if (marker==0.) {
+                    result = getDistFunc0(p, s, edgeWidth);
+            """
+        for i in range(1, 9):
+            dist_func_str += f"""
+                {'}'}else if(marker=={i}.){'{'}
+                    result = getDistFunc{i}(p, s, edgeWidth);
+            """
+        dist_func_str += "\n}\nreturn result;\n}\n"
+        shader += dist_func_str
         return shader
 
     @property
