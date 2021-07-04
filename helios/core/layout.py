@@ -44,18 +44,18 @@ class HeliosFr(NetworkLayoutAsync):
         self,
         initial_positions,
         edges,
-        window,
-        super_actor, viscosity=0.3, a=0.0006, b=1,
+        network_draw,
+        viscosity=0.3, a=0.0006, b=1,
         max_workers=8, update_interval_workers=0,
         velocities=None
     ):
 
         self._started = False
-        self.window = window
+        self.window = network_draw.showm.window
         self._interval_timer = None
         self._nodes_count = initial_positions.shape[0]
         self._update_interval_workers = update_interval_workers
-        self._super_actor = super_actor
+        self._super_actor = network_draw
 
         self._positions = np.ascontiguousarray(
             initial_positions, dtype=np.float32)

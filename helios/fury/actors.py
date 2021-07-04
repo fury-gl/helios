@@ -729,7 +729,7 @@ class FurySuperEdge:
         update_actor(self.vtk_actor)
 
 
-class FurySuperActorNetwork:
+class NetworkDraw:
     def __init__(
         self,
         positions,
@@ -744,6 +744,8 @@ class FurySuperActorNetwork:
         edge_line_color=(1, 1, 1),
         edge_line_opacity=.5,
         edge_line_width=1,
+        window_size=(400, 400),
+        **kwargs
 
     ):
         self._composed_by_superactors = True
@@ -768,6 +770,21 @@ class FurySuperActorNetwork:
             self.vtk_actors += [edges.vtk_actor]
 
         self.edges = edges
+        self.scene = window.Scene()
+        is_2d = False
+        for actor in self.vtk_actors:
+            self.scene.add(actor)
+        if is_2d:
+            interactor_style = 'image'
+        else:
+            interactor_style = 'custom'
+        self.showm = window.ShowManager(
+            self.scene,
+            size=window_size,
+            interactor_style=interactor_style,
+            **kwargs
+        )
+        self.Render = self.showm.window.Render
 
     @property
     def positions(self):
