@@ -752,6 +752,7 @@ class NetworkDraw:
             positions = np.array([
                     positions[:, 0], positions[:, 1],
                     np.zeros(positions.shape[0])]).T
+        self._positions = positions
         self.nodes = FurySuperNode(
             positions=positions,
             colors=colors,
@@ -793,11 +794,11 @@ class NetworkDraw:
 
     @property
     def positions(self):
-        return self.nodes.positions
+        return self._positions
 
     @positions.setter
     def positions(self, positions):
-        if self._is_2d:
+        if positions.shape[1] == 2:
             positions = np.array([
                 positions[:, 0], positions[:, 1],
                 np.zeros(positions.shape[0])]).T

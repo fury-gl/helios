@@ -42,7 +42,6 @@ class NetworkLayoutAsync(NetworkLayout, metaclass=ABCMeta):
 class HeliosFr(NetworkLayoutAsync):
     def __init__(
         self,
-        initial_positions,
         edges,
         network_draw,
         viscosity=0.3, a=0.0006, b=1,
@@ -53,12 +52,12 @@ class HeliosFr(NetworkLayoutAsync):
         self._started = False
         self.window = network_draw.showm.window
         self._interval_timer = None
-        self._nodes_count = initial_positions.shape[0]
+        self._nodes_count = network_draw._positions.shape[0]
         self._update_interval_workers = update_interval_workers
         self._super_actor = network_draw
 
         self._positions = np.ascontiguousarray(
-            initial_positions, dtype=np.float32)
+            network_draw._positions, dtype=np.float32)
         self._edges = np.ascontiguousarray(edges, dtype=np.uint64)
 
         if velocities is None:
