@@ -45,10 +45,9 @@ class FurySuperNode:
         self._edge_width_is_uniform = isinstance(edge_width, (float, int))
         # self._edge_color_is_uniform = len(edge_color) == 3
         self._positions_is_uniform = False
-
         self._init_actor(
-            positions, colors, scales)
-
+            positions.shape[0], colors, scales)
+        self.positions = positions
         self.uniforms_list = []
 
         self._init_marker_property(marker)
@@ -93,10 +92,10 @@ class FurySuperNode:
             render_window, self.vtk_actor,
             effects=effects)
 
-    def _init_actor(self, positions, colors, scales):
+    def _init_actor(self, num_nodes, colors, scales):
 
         # to avoid memory corruption
-        centers = np.zeros_like(positions)
+        centers = np.zeros((num_nodes, 3))
 
         verts, faces = fp.prim_square()
         res = fp.repeat_primitive(
@@ -114,7 +113,7 @@ class FurySuperNode:
 
         self.centers_geo = array_from_actor(actor, array_name="center")
         self.centers_geo_orig = np.array(self.centers_geo)
-        self.centers_length = self.centers_geo.shape[0] / positions.shape[0]
+        self.centers_length = self.centers_geo.shape[0] / num_nodes
         self.verts_geo = vertices_from_actor(actor)
         self.verts_geo_orig = np.array(self.verts_geo)
 
@@ -122,7 +121,6 @@ class FurySuperNode:
 
         self.vtk_actor = actor
         # update to correct positions
-        self.positions = positions
 
     def _init_marker_property(self, marker):
         marker2id = {
@@ -659,17 +657,17 @@ class FurySuperEdge:
 
         self.edges = edges
         self._num_edges = len(self.edges)
-       
         self.vtk_actor = line_actor(
             np.zeros((self._num_edges, 2, 3)),
             colors=colors, 
             linewidth=line_width,
             opacity=opacity
         )
-        #self.vtk_actor.GetProperty().LightingOff()
-        #self.vtk_actor.GetProperty().ShadingOff()
+
+        self._is_2d = len(positions[0]) == 2
         self.positions = positions
-        self._colors_geo = array_from_actor(self.vtk_actor, array_name="colors")
+        self._colors_geo = array_from_actor(
+            self.vtk_actor, array_name="colors")
 
         self.blending = blending
         self.depth_test = True
@@ -706,6 +704,7 @@ class FurySuperEdge:
         """positions never it's a uniform variable
         """
         # avoids memory corruption
+        
         edges_positions = vertices_from_actor(self.vtk_actor)
         edges_positions[::2] = positions[self.edges[:, 0]]
         edges_positions[1::2] = positions[self.edges[:, 1]]
@@ -748,7 +747,11 @@ class NetworkDraw:
         **kwargs
 
     ):
-        self._composed_by_superactors = True
+        self._is_2d = len(positions[0]) == 2
+        if self._is_2d:
+            positions = np.array([
+                    positions[:, 0], positions[:, 1],
+                    np.zeros(positions.shape[0])]).T
         self.nodes = FurySuperNode(
             positions=positions,
             colors=colors,
@@ -757,9 +760,9 @@ class NetworkDraw:
             edge_opacity=node_edge_opacity,
             edge_width=node_edge_width,
             edge_color=node_edge_color,
-            marker_opacity=node_opacity
+            marker_opacity=node_opacity,
         )
-
+        
         self.vtk_actors = [self.nodes.vtk_actor]
 
         if edges is not None:
@@ -771,13 +774,15 @@ class NetworkDraw:
 
         self.edges = edges
         self.scene = window.Scene()
-        is_2d = False
         for actor in self.vtk_actors:
             self.scene.add(actor)
-        if is_2d:
+
+        if self._is_2d:
             interactor_style = 'image'
+            self.scene.SetBackground((255, 255, 255))
         else:
             interactor_style = 'custom'
+
         self.showm = window.ShowManager(
             self.scene,
             size=window_size,
@@ -791,10 +796,14 @@ class NetworkDraw:
         return self.nodes.positions
 
     @positions.setter
-    def positions(self, data):
-        self.nodes.positions = data
+    def positions(self, positions):
+        if self._is_2d:
+            positions = np.array([
+                positions[:, 0], positions[:, 1],
+                np.zeros(positions.shape[0])]).T
+        self.nodes.positions = positions
         if self.edges is not None:
-            self.edges.positions = data
+            self.edges.positions = positions
 
     def update(self):
         for actor in self.vtk_actors:
