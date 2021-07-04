@@ -394,7 +394,7 @@ class FurySuperNode:
                 vec3 result = vec3(sdf, minSdf, edgeWidth);
                 return result ;
             }
-            
+ 
             """
         # shader += """
         #     vec3 getDistFunc(vec2 p, float s, float edgeWidth, int marker){
@@ -728,7 +728,7 @@ class FurySuperEdge:
         update_actor(self.vtk_actor)
 
 
-class NetworkDraw:
+class NetworkSuperActor():
     def __init__(
         self,
         positions,
@@ -743,15 +743,12 @@ class NetworkDraw:
         edge_line_color=(1, 1, 1),
         edge_line_opacity=.5,
         edge_line_width=1,
-        window_size=(400, 400),
-        **kwargs
-
     ):
-        self._is_2d = len(positions[0]) == 2
+        self._is_2d = positions.shape[1] == 2
         if self._is_2d:
             positions = np.array([
-                    positions[:, 0], positions[:, 1],
-                    np.zeros(positions.shape[0])]).T
+                            positions[:, 0], positions[:, 1],
+                            np.zeros(positions.shape[0])]).T
         self._positions = positions
         self.nodes = FurySuperNode(
             positions=positions,
@@ -763,7 +760,7 @@ class NetworkDraw:
             edge_color=node_edge_color,
             marker_opacity=node_opacity,
         )
-        
+
         self.vtk_actors = [self.nodes.vtk_actor]
 
         if edges is not None:
@@ -774,23 +771,6 @@ class NetworkDraw:
             self.vtk_actors += [edges.vtk_actor]
 
         self.edges = edges
-        self.scene = window.Scene()
-        for actor in self.vtk_actors:
-            self.scene.add(actor)
-
-        if self._is_2d:
-            interactor_style = 'image'
-            self.scene.SetBackground((255, 255, 255))
-        else:
-            interactor_style = 'custom'
-
-        self.showm = window.ShowManager(
-            self.scene,
-            size=window_size,
-            interactor_style=interactor_style,
-            **kwargs
-        )
-        self.Render = self.showm.window.Render
 
     @property
     def positions(self):
@@ -809,3 +789,58 @@ class NetworkDraw:
     def update(self):
         for actor in self.vtk_actors:
             update_actor(actor)
+
+
+class NetworkDraw(NetworkSuperActor):
+    def __init__(
+        self,
+        positions,
+        edges=None,
+        colors=(0, 1, 0),
+        scales=1,
+        marker='o',
+        node_edge_width=.0,
+        node_opacity=.8,
+        node_edge_opacity=1,
+        node_edge_color=(255, 255, 255),
+        edge_line_color=(1, 1, 1),
+        edge_line_opacity=.5,
+        edge_line_width=1,
+        window_size=(400, 400),
+        showm=None,
+        **kwargs
+
+    ):
+        super().__init__(
+            positions,
+            edges,
+            colors,
+            scales,
+            marker,
+            node_edge_width,
+            node_opacity,
+            node_edge_opacity,
+            node_edge_color,
+            edge_line_color,
+            edge_line_opacity,
+            edge_line_width
+        )
+
+        self.scene = window.Scene()
+        for actor in self.vtk_actors:
+            self.scene.add(actor)
+
+        if self._is_2d:
+            interactor_style = 'image'
+            self.scene.SetBackground((255, 255, 255))
+        else:
+            interactor_style = 'custom'
+        if showm is None:
+            showm = window.ShowManager(
+                self.scene,
+                size=window_size,
+                interactor_style=interactor_style,
+                **kwargs
+            )
+        self.showm = showm
+        self.Render = self.showm.window.Render
