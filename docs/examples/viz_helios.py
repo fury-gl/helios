@@ -84,7 +84,8 @@ network_draw = NetworkDraw(
         node_edge_width=0,
         edge_line_color=edgesColors,
         marker='3d',
-       edges=edges
+        edges=edges,
+        better_performance=False # use that for older GPUs
 )
 layout = HeliosFr(edges,network_draw, update_interval_workers=10)
 

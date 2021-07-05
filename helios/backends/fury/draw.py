@@ -18,11 +18,16 @@ class NetworkDraw(NetworkSuperActor):
         edge_line_color=(1, 1, 1),
         edge_line_opacity=.5,
         edge_line_width=1,
+        better_performance=False,
+        write_frag_depth=True,
         window_size=(400, 400),
         showm=None,
         **kwargs
 
     ):
+        if better_performance:
+            write_frag_depth = False
+
         super().__init__(
             positions,
             edges,
@@ -35,7 +40,8 @@ class NetworkDraw(NetworkSuperActor):
             node_edge_color,
             edge_line_color,
             edge_line_opacity,
-            edge_line_width
+            edge_line_width,
+            write_frag_depth
         )
 
         self.scene = window.Scene()

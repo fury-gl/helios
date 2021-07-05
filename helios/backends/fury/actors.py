@@ -27,6 +27,7 @@ class FurySuperNode:
         edge_opacity=1,
         edge_color=(1, 1, 1),
         marker_opacity=.8,
+        write_frag_depth=True
     ):
         self._vcount = positions.shape[0]
         self._composed_by_superactors = False
@@ -34,7 +35,7 @@ class FurySuperNode:
         # to avoid any kind of expansive calculations when we
         # are dealing with just 2d markers
         self._marker_is_3d = marker == '3d'
-
+        self._write_frag_depth = write_frag_depth
         self._marker_is_uniform = isinstance(marker, str)
         self._marker = marker if self._marker_is_uniform else None
 
@@ -457,6 +458,11 @@ class FurySuperNode:
             /* Calculating specular */
             float ssf = pow(ddf, specularStrength);
 
+            /* Calculating colors based on a fixed light */
+            color = max(color*shadowMix+ddf * color, ssf * vec3(specularMix));
+            """
+        if self._write_frag_depth and self._marker_is_3d:
+            shader += """
             /* Obtaining the two clipping planes for depth buffer */
             float far = gl_DepthRange.far;
             float near = gl_DepthRange.near;
@@ -480,11 +486,7 @@ class FurySuperNode:
 
             /* Writing the final depth to depth buffer */
             gl_FragDepth = depth;
-
-            /* Calculating colors based on a fixed light */
-            color = max(color*shadowMix+ddf * color, ssf * vec3(specularMix));
             """
- 
         shader += """
             vec4 rgba = vec4(  color, markerOpacity );
             if (edgeWidthNew > 0.0){
@@ -743,6 +745,7 @@ class NetworkSuperActor():
         edge_line_color=(1, 1, 1),
         edge_line_opacity=.5,
         edge_line_width=1,
+        write_frag_depth=True
     ):
         self._is_2d = positions.shape[1] == 2
         if self._is_2d:
@@ -750,6 +753,7 @@ class NetworkSuperActor():
                             positions[:, 0], positions[:, 1],
                             np.zeros(positions.shape[0])]).T
         self._positions = positions
+
         self.nodes = FurySuperNode(
             positions=positions,
             colors=colors,
@@ -759,6 +763,7 @@ class NetworkSuperActor():
             edge_width=node_edge_width,
             edge_color=node_edge_color,
             marker_opacity=node_opacity,
+            write_frag_depth=write_frag_depth
         )
 
         self.vtk_actors = [self.nodes.vtk_actor]
