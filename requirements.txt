@@ -1,2 +1,3 @@
 numpy>=1.8
 heliosFR
+git+https://github.com/devmessias/fury.git@network#egg=fury
