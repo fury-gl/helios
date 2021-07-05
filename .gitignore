@@ -1,3 +1,5 @@
+# to uninstall when using pip install e. or python setup.py develop
+files.txt
 # Prerequisites
 *.d
 

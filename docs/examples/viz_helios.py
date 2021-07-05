@@ -13,7 +13,7 @@ indicates a citation between two of them.
 # First, let's import some useful functions
 
 from os.path import join as pjoin
-from fury import actor, window, colormap as cmap
+from fury import window, colormap as cmap
 import numpy as np
 
 ###############################################################################
@@ -21,8 +21,8 @@ import numpy as np
 
 from fury.data.fetcher import fetch_viz_wiki_nw
 
-from helios.fury.actors import FurySuperActorNetwork
-
+from helios import NetworkDraw
+from helios.layouts import HeliosFr
 
 files, folder = fetch_viz_wiki_nw()
 categories_file, edges_file, positions_file = sorted(files.keys())
@@ -31,6 +31,7 @@ categories_file, edges_file, positions_file = sorted(files.keys())
 # We read our datasets
 
 positions = np.loadtxt(pjoin(folder, positions_file))
+positions = np.random.normal(scale=10, size=positions.shape)
 categories = np.loadtxt(pjoin(folder, categories_file), dtype=str)
 edges = np.loadtxt(pjoin(folder, edges_file), dtype=int)
 
@@ -46,13 +47,11 @@ index2category = np.unique(categories)
 
 categoryColors = cmap.distinguishable_colormap(nb_colors=len(index2category))
 
-categoryMarkers = ['o', 's', 'd']
+
 
 colors = np.array([categoryColors[category2index[category]]
                    for category in categories])
 
-markers = [categoryMarkers[category2index[category]]
-                   for category in categories]
 ###############################################################################
 # We define our node size
 
@@ -63,13 +62,13 @@ radii = 1 + np.random.rand(len(positions))
 # OF course, the colors of each edges will be an interpolation between the two
 # node that it connects.
 
-edgesPositions = []
+#edgesPositions = []
 edgesColors = []
 for source, target in edges:
-    edgesPositions.append(np.array([positions[source], positions[target]]))
+    #edgesPositions.append(np.array([positions[source], positions[target]]))
     edgesColors.append(np.array([colors[source], colors[target]]))
 
-edgesPositions = np.array(edgesPositions)
+#edgesPositions = np.array(edgesPositions)
 edgesColors = np.average(np.array(edgesColors), axis=1)
 
 ###############################################################################
@@ -78,37 +77,18 @@ edgesColors = np.average(np.array(edgesColors), axis=1)
 # lines_actor for the edges.
 
 
-citation_network_3d = FurySuperActorNetwork(
+network_draw = NetworkDraw(
         positions=positions,
-        colors=colors,
-        scales=5,
-        marker='3d'
+        colors = colors,
+        scales=4,
+        node_edge_width=0,
+        edge_line_color=edgesColors,
+        marker='3d',
+       edges=edges
 )
-print(positions.min(), positions.max())
-citation_network_symbols = FurySuperActorNetwork(
-        positions=positions+np.array([500, 0, 0]),
-        colors=colors,
-        # edge_width = .1,
-        edge_width=np.random.uniform(size=positions.shape[0]),
-        edge_color=[255, 255, 255],
-        marker=markers,
-        scales=10
-)
-# lines_actor = actor.line(edgesPositions,
-#                          colors=edgesColors,
-#                          opacity=0.1,
-#                          )
+layout = HeliosFr(edges,network_draw, update_interval_workers=10)
 
-###############################################################################
-# All actors need to be added in a scene, so we build one and add our
-# lines_actor and sphere_actor.
-
-scene = window.Scene()
-
-# scene.add(lines_actor)
-scene.add(citation_network_3d.nodes.vtk_actor)
-scene.add(citation_network_symbols.nodes.vtk_actor)
-
+layout.start()
 ###############################################################################
 # The final step ! Visualize and save the result of our creation! Please,
 # switch interactive variable to True if you want to visualize it.
@@ -116,7 +96,9 @@ scene.add(citation_network_symbols.nodes.vtk_actor)
 interactive = True
 
 if interactive:
-    window.show(scene, size=(600, 600))
+    network_draw.showm.initialize()
+
+    network_draw.showm.start()
 
 # window.record(scene, out_path='journal_networks.png', size=(600, 600))
 
