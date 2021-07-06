@@ -1,0 +1,9 @@
+[run]
+branch = True
+source = helios
+include = */helios/*
+omit =
+    */setup.py
+    */_version.py
+[report]
+show_missing = True

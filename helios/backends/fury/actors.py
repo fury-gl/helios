@@ -15,6 +15,10 @@ from fury import window
 
 from helios.backends.fury.tools import Uniform, Uniforms
 
+_MARKER2Id = {
+            'o': 0, 's': 1, 'd': 2, '^': 3, 'p': 4,
+            'h': 5, 's6': 6, 'x': 7, '+': 8, '3d': 0}
+
 
 class FurySuperNode:
     def __init__(
@@ -124,16 +128,14 @@ class FurySuperNode:
         # update to correct positions
 
     def _init_marker_property(self, marker):
-        marker2id = {
-            'o': 0, 's': 1, 'd': 2, '^': 3, 'p': 4,
-            'h': 5, 's6': 6, 'x': 7, '+': 8, '3d': 0}
+        
         if self._marker_is_uniform:
-            marker_value = marker2id[marker]
+            marker_value = _MARKER2Id[marker]
             self.uniforms_list.append(
                 Uniform(
                     name='marker', uniform_type='f', value=marker_value))
         else:
-            list_of_markers = [marker2id[i] for i in marker]
+            list_of_markers = [_MARKER2Id[i] for i in marker]
 
             list_of_markers = np.repeat(list_of_markers, 4).astype('float')
             attribute_to_actor(
