@@ -1,7 +1,5 @@
-import os
 import pytest
 
-import numpy.testing as npt
 import fury.shaders as fs
 
 from helios.backends.fury.tools import Uniform, Uniforms
