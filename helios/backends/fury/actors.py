@@ -608,7 +608,7 @@ class FurySuperNode:
      
     @property
     def positions(self):
-        pass
+        return self.centers_geo[0::4]
 
     @positions.setter
     def positions(self, positions):
@@ -754,7 +754,6 @@ class NetworkSuperActor():
             positions = np.array([
                             positions[:, 0], positions[:, 1],
                             np.zeros(positions.shape[0])]).T
-        self._positions = positions
 
         self.nodes = FurySuperNode(
             positions=positions,
@@ -781,7 +780,7 @@ class NetworkSuperActor():
 
     @property
     def positions(self):
-        return self._positions
+        return self.nodes.positions
 
     @positions.setter
     def positions(self, positions):
