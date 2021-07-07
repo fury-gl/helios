@@ -111,6 +111,8 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
                 self._positions_torch = self.mde.embed(
                     self._positions_torch, max_iter=iters_by_step)
             self._update(self._positions_torch.cpu().numpy())
+        # to inform that everthing worked
+        self._shm_manager.info._repr[1] = 1
 
 
 class MDE(NetworkLayoutIPCRender):
