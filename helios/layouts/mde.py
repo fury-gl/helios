@@ -22,7 +22,7 @@ _PENALTIES = {
     'logratio': pymde.penalties.LogRatio,
     'logistic': pymde.penalties.Logistic,
     'power': pymde.penalties.Power,
-    'pushandpull': pymde.penalties.PushAndPull,
+    # 'pushandpull': pymde.penalties.PushAndPull,
     'quadratic': pymde.penalties.Quadratic,
 }
 
@@ -35,10 +35,10 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
         info_buffer_name,
         weights_buffer_name=None,
         dimension=3,
-        penaltie_name=None,
+        penalty_name=None,
         use_shortest_path=False,
         constraint_name=None,
-        penaltie_parameters_buffer_name=None,
+        penalty_parameters_buffer_name=None,
     ):
         super().__init__(
             edges_buffer_name,
@@ -63,22 +63,23 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
             edges_torch = shortest_paths_graph.edges
             distortion = pymde.losses.WeightedQuadratic(
                 shortest_paths_graph.distances)
-        elif penaltie_name is None:
+        elif penalty_name is None:
             distortion = pymde.penalties.Quadratic(weights_torch)
         else:
-            if penaltie_name in _PENALTIES.keys():
-                if penaltie_parameters_buffer_name is not None:
+            if penalty_name in _PENALTIES.keys():
+                func = distortion = _PENALTIES[penalty_name]
+                if penalty_parameters_buffer_name is not None:
                     self._shm_manager.load_array(
-                        'penaltie_parameters',
-                        penaltie_parameters_buffer_name,
+                        'penalty_parameters',
+                        penalty_parameters_buffer_name,
                         1,
                         'float32'
                     )
-                    distortion = _PENALTIES[penaltie_name](
+                    func(
                         weights_torch,
-                        *self._shm_manager.penaltie_parameters._repr)
+                        *self._shm_manager.penalty_parameters._repr)
                 else:
-                    distortion = _PENALTIES[penaltie_name](weights_torch)
+                    distortion = func(weights_torch)
             else:
                 raise ValueError(
                     'The penalties valid names are: ' +
@@ -123,8 +124,8 @@ class MDE(NetworkLayoutIPCRender):
         weights=None,
         use_shortest_path=True,
         constraint_name=None,
-        penaltie_name=None,
-        penaltie_parameters=None
+        penalty_name=None,
+        penalty_parameters=None
     ):
 
         super().__init__(
@@ -139,18 +140,18 @@ class MDE(NetworkLayoutIPCRender):
                 f'{list(_CONSTRAINTS.keys())}')
 
         self._constraint_name = constraint_name
-        self._penaltie_name = penaltie_name
+        self._penalty_name = penalty_name
         self._use_shortest_path = use_shortest_path
-        if isinstance(penaltie_parameters, list):
-            self._penaltie_parameters = penaltie_parameters
+        if isinstance(penalty_parameters, list):
+            self._penalty_parameters = penalty_parameters
             self._shm_manager.add_array(
-                'penaltie_parameters',
-                np.array(penaltie_parameters),
+                'penalty_parameters',
+                np.array(penalty_parameters),
                 dimension=1,
                 dtype='float32'
             )
         else:
-            self._penaltie_parameters = None
+            self._penalty_parameters = None
 
         self._update()
 
@@ -166,11 +167,11 @@ class MDE(NetworkLayoutIPCRender):
         s += f'use_shortest_path={self._use_shortest_path},'
         if self._constraint_name is not None:
             s += f'constraint_name="{self._constraint_name}",'
-        if self._penaltie_name is not None:
-            s += f'penaltie_name="{self._penaltie_name}",'
-        if self._penaltie_parameters is not None:
-            s += 'penaltie_parameters_buffer_name='
-            s += f'"{self._shm_manager.penaltie_parameters._buffer_name}",'
+        if self._penalty_name is not None:
+            s += f'penalty_name="{self._penalty_name}",'
+        if self._penalty_parameters is not None:
+            s += 'penalty_parameters_buffer_name='
+            s += f'"{self._shm_manager.penalty_parameters._buffer_name}",'
         s += f'dimension={self._dimension});'
         s += f'mde_h.start({steps},{iters_by_step});'
         s += 'mde_h.cleanup();'
