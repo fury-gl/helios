@@ -115,7 +115,7 @@ class NetworkLayoutIPCServerCalc(ABC):
 
     def _update(self, positions):
         """This method update the shared memory resource
-        which stores the network positions. Usualy, you
+        which stores the network positions. Usually, you
         should call this in the start method implementation
 
         Parameters:
@@ -125,9 +125,12 @@ class NetworkLayoutIPCServerCalc(ABC):
         """
         self._shm_manager.positions._repr[:] = positions.astype('float32')
         self._shm_manager.info._repr[0] = time.time()
-
-    def __del__(self):
+  
+    def cleanup(self):
         self._shm_manager.cleanup()
+  
+    def __del__(self):
+        self.cleanup()
 
 
 class NetworkLayoutIPCRender(ABC):
