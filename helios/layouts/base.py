@@ -263,6 +263,9 @@ class NetworkLayoutIPCRender(ABC):
 
         self._started = False
 
+    def cleanup(self):
+        self._shm_manager.cleanup()
+
     def __del__(self):
         self.stop()
-        self._shm_manager.cleanup()
+        self.cleanup()

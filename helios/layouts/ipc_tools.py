@@ -58,6 +58,7 @@ class SharedMemArrayManager(GenericArrayBufferManager):
                 this Obj. will try to load the memory resource
         """
         super().__init__(dimension, dtype)
+        self._released = False
         if buffer_name is None:
             self.create_mem_resource(data)
         else:
@@ -89,6 +90,9 @@ class SharedMemArrayManager(GenericArrayBufferManager):
         self._buffer_name = self._buffer.name
 
     def cleanup(self):
+        if self._released:
+            return
+
         self._buffer.close()
         # this it's due the python core issues
         # https://bugs.python.org/issue38119
@@ -100,6 +104,7 @@ class SharedMemArrayManager(GenericArrayBufferManager):
             except FileNotFoundError:
                 print(f'Shared Memory {self._buffer_name}\
                         File not found')
+        self._released = True
 
 
 class ShmManagerMultiArrays:
