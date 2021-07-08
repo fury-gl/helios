@@ -1,11 +1,9 @@
 import numpy as np
-import numpy.testing as npt
 import pymde
 
 from fury import window
 
 from helios import NetworkDraw
-from helios.backends.fury.actors import _MARKER2Id
 from helios.layouts import MDE
 
 
@@ -27,7 +25,7 @@ def test_mde_penaltie(interactive=False):
         constraint_name='standardized'
     )
     # before start, this element represents if
-    # the MDE computations has finishded without
+    # the MDE computations has finished without
     # errors
     assert mde._shm_manager.info._repr[1] == 0
     mde.start(2, 10, 10)
@@ -56,7 +54,7 @@ def test_mde(interactive=False):
         constraint_name='standardized'
     )
     # before start, this element represents if
-    # the MDE computations has finishded without
+    # the MDE computations has finished without
     # errors
     assert mde._shm_manager.info._repr[1] == 0
     mde.start(2, 10, 10)
