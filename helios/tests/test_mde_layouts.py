@@ -8,7 +8,7 @@ from helios import NetworkDraw
 from helios.layouts import MDE
 
 
-def test_mde_penalty(interactive=False):
+def test_penalty(interactive=False):
     n_items = 20
     edges = pymde.all_edges(n_items).cpu().numpy()
     np.delete(edges, [1, 3, 5, 7])
@@ -44,7 +44,7 @@ def test_mde_penalty(interactive=False):
     mde._shm_manager.cleanup()
 
 
-def test_mde(interactive=False):
+def test_draw(interactive=False):
     n_items = 20
     edges = pymde.all_edges(n_items).cpu().numpy()
     np.delete(edges, [1, 3, 5, 7, 18])
