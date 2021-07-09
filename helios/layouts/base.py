@@ -99,7 +99,7 @@ class NetworkLayoutIPCServerCalc(ABC):
 
         if weights_buffer_name is not None:
             self._shm_manager.load_array(
-                'weights', buffer_name=edges_buffer_name,
+                'weights', buffer_name=weights_buffer_name,
                 dimension=1, dtype='float32')
 
     @abstractmethod
