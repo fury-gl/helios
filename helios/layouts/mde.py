@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 import torch
 import pymde
 
@@ -43,6 +43,26 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
         constraint_name=None,
         constraint_anchors_buffer_name=None,
     ):
+        """This Obj. reads the network information stored in a shared memory
+        resource and execute the MDE layout algorithm
+
+        Parameters:
+        -----------
+            edges_buffer_name : str
+            positions_buffer_name : str
+            info_buffer_name : str
+            weights_buffer_name : str, optional
+            dimension=3 : int, optional
+                layout dimension
+            penalty_name : str, optional
+            penalty_parameters_buffer_name : str, optional
+            attractive_penalty_name : str, optional
+            repulsive_penalty_name : str, optional
+            use_shortest_path : str, optional
+            constraint_name : str, optional
+            constraint_anchors_buffer_name : str, optional
+
+        """
         super().__init__(
             edges_buffer_name,
             positions_buffer_name,
@@ -54,10 +74,13 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
             self._shm_manager.positions._repr)
         edges_torch = torch.tensor(
             self._shm_manager.edges._repr)
+
         if weights_buffer_name is not None:
-            weights_torch = torch.tensor(self._shm_manager.weights._repr)
+            weights_torch = torch.tensor(
+                self._shm_manager.weights._repr)
         else:
             weights_torch = torch.ones(edges_torch.shape[0])
+
         if use_shortest_path and penalty_name is None:
             g_torch = pymde.Graph.from_edges(edges_torch, weights_torch)
             shortest_paths_graph = pymde.preprocess.graph.shortest_paths(
@@ -66,10 +89,10 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
             distortion = pymde.losses.WeightedQuadratic(
                 shortest_paths_graph.distances)
         elif penalty_name is None:
-            distortion = pymde.penalties.Quadratic(weights_torch)
+            distortion = pymde.penalties.WeightedQuadratic(weights_torch)
         else:
             if penalty_name in _PENALTIES.keys():
-                func = distortion = _PENALTIES[penalty_name]
+                func = _PENALTIES[penalty_name]
                 if penalty_name == 'pushandpull':
                     if attractive_penalty_name not in _PENALTIES.keys() or\
                          repulsive_penalty_name not in _PENALTIES.keys():
@@ -139,14 +162,17 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
         )
 
     def start(self, steps=100, iters_by_step=3):
-        for i in range(steps):
-            if i == 0:
-                self._positions_torch = self.mde.embed(
+        """This method starts the network layout algorithm.
+
+        Parameters:
+        -----------
+            steps : int
+            iters_by_step: int
+
+        """
+        for _ in range(steps):
+            self._positions_torch = self.mde.embed(
                     self._positions_torch,
-                    max_iter=iters_by_step)
-            else:
-                self._positions_torch = self.mde.embed(
-                    self._positions_torch, 
                     max_iter=iters_by_step)
 
             self._update(self._positions_torch.cpu().numpy())
@@ -169,7 +195,35 @@ class MDE(NetworkLayoutIPCRender):
         attractive_penalty_name='log1p',
         repulsive_penalty_name='log',
     ):
+        """A object which performs Minimum Distortion Embedding algorithms
+        using the PyMDE lib running in a different process which comunicates
+        with this object through SharedMemory from python>=3.8
 
+        Parameters:
+        -----------
+            edges : ndarray
+            network_draw : NetworkDraw
+            weights: array, optional
+                edge weights
+            use_shortest_path : bool, optional
+            constraint_name : str, optional
+                centered, standardized or anchored
+            anchors : array, optional
+                a list of vertex that will be anchored
+            anchors_pos : ndarray, optional
+                The positions of the anchored vertex
+            penalty_name : str, optional
+                cubic, huber, invpower, linear, log, log1p, logratio,
+                logistic, power, pushandpull  or quadratic
+            penalty_parameters : array, optional
+            attractive_penalty_name : str, optional
+                cubic, huber, invpower, linear, log, log1p, logratio,
+                logistic, power, pushandpull  or quadratic
+            repulsive_penalty_name : str, optional
+                cubic, huber, invpower, linear, log, log1p, logratio,
+                logistic, power, pushandpull  or quadratic
+
+        """
         super().__init__(
             network_draw,
             edges,
@@ -221,6 +275,18 @@ class MDE(NetworkLayoutIPCRender):
 
     def _command_string(
             self, steps=100, iters_by_step=3,):
+        """This will return the python code which starts the MDEServer
+
+        Parameters:
+        -----------
+            steps : int, optional, default 100
+            iters_by_step : int, optional, default 3
+
+        Returns
+        -------
+            s : str
+
+        """
         s = 'from helios.layouts.mde import MDEServerCalc;'
         s += 'from fury.stream.tools import remove_shm_from_resource_tracker;'
         s += 'remove_shm_from_resource_tracker();'
@@ -229,6 +295,10 @@ class MDE(NetworkLayoutIPCRender):
         s += 'positions_buffer_name='
         s += f'"{self._shm_manager.positions._buffer_name}",'
         s += f'info_buffer_name="{self._shm_manager.info._buffer_name}",'
+        if 'weights' in self._shm_manager._shm_attr_names:
+            s += 'weights_buffer_name='
+            s += f'"{self._shm_manager.weights._buffer_name}",'
+
         s += f'use_shortest_path={self._use_shortest_path},'
         if self._constraint_name is not None:
             s += f'constraint_name="{self._constraint_name}",'

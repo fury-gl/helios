@@ -41,7 +41,7 @@ class NetworkLayoutAsync(NetworkLayout, metaclass=ABCMeta):
 
 
 def is_running(p, timeout=0):
-    '''Check if a given process is running
+    '''Check if the process "p" is running
 
     Parameters:
     ----------
@@ -51,6 +51,7 @@ def is_running(p, timeout=0):
     Returns:
     --------
         running : bool
+
     '''
     try:
         p.wait(timeout=timeout)
@@ -99,23 +100,25 @@ class NetworkLayoutIPCServerCalc(ABC):
 
         if weights_buffer_name is not None:
             self._shm_manager.load_array(
-                'weights', buffer_name=edges_buffer_name,
+                'weights', buffer_name=weights_buffer_name,
                 dimension=1, dtype='float32')
 
     @abstractmethod
     def start(self, steps=100, iters_by_step=3):
         """This method starts the network layout algorithm.
+
         Parameters:
         -----------
             steps : int
             iters_by_step: int
+
         """
         ...
 
     def _update(self, positions):
-        """This method update the shared memory resource
-        which stores the network positions. Usualy, you
-        should call this in the start method implementation
+        """This method update the shared memory resource which stores the
+        network positions. Usually, you should call this inside of the
+        start method implementation
 
         Parameters:
         -----------
@@ -139,7 +142,7 @@ class NetworkLayoutIPCRender(ABC):
             network_draw : NetworkDraw
             edges : ndarray
                 a bi-dimensional array with the edges list
-            weights : array
+            weights : array, optional
 
         """
         self._started = False
@@ -178,7 +181,8 @@ class NetworkLayoutIPCRender(ABC):
 
     @abstractmethod
     def _command_string(self, steps, iters_by_step):
-        """Used inside of the start method.
+        """Should return the python code which will compute
+        the layout positions.
 
         Parameters:
         -----------
@@ -192,10 +196,15 @@ class NetworkLayoutIPCRender(ABC):
         --------
             command_string : str
                 a string with a code that starts the layout algorithm.
+
         """
         ...
 
     def update(self):
+        """This method updates the position of the network actor
+        and right after that refresh the network draw
+
+        """
         self._network_draw.positions = self._shm_manager.positions._repr.\
             astype('float64')
         self._network_draw.refresh()
@@ -220,6 +229,12 @@ class NetworkLayoutIPCRender(ABC):
             iters_by_step : int
                 number of interations in each step
             without_iren_start : bool, optional, default True
+                Set this to False if you will start the ShowManager.
+                That is, if you will invoke the following commands
+
+                >>> network_draw.showm.initialize()
+                >>> network_draw.showm.start()
+
         """
         if self._started:
             return
@@ -250,6 +265,17 @@ class NetworkLayoutIPCRender(ABC):
         self._started = True
 
     def _check_and_sync(self):
+        """ This will check  two conditions:
+        1 - If the positions in the shared memory resources have
+        changed.
+        2 - If the process responsible to compute the layout positions
+        finished the computations
+
+        Returns:
+        --------
+            should_update : bool
+
+        """
         last_update = self._shm_manager.info._repr[0]
         # if stop has been called inside the treading timer
         # maybe another callback can be executed
@@ -264,6 +290,7 @@ class NetworkLayoutIPCRender(ABC):
 
     def stop(self):
         """Stop the layout algorithm
+
         """
         if not self._started:
             return
@@ -288,6 +315,9 @@ class NetworkLayoutIPCRender(ABC):
         self._started = False
 
     def cleanup(self):
+        """Release the shared memory resources
+
+        """
         self._shm_manager.cleanup()
 
     def __del__(self):
