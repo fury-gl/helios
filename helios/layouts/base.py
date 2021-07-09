@@ -117,8 +117,8 @@ class NetworkLayoutIPCServerCalc(ABC):
 
     def _update(self, positions):
         """This method update the shared memory resource which stores the
-        network positions. Usually, youshould call this in the start method
-        implementation
+        network positions. Usually, you should call this inside of the
+        start method implementation
 
         Parameters:
         -----------

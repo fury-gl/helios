@@ -43,9 +43,24 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
         constraint_name=None,
         constraint_anchors_buffer_name=None,
     ):
-        """Reads the network information from the shared memory resources
-        and performs the MDE layout algorithm
+        """This Obj. reads the network information stored in a shared memory
+        resource and execute the MDE layout algorithm
 
+        Parameters:
+        -----------
+            edges_buffer_name : str
+            positions_buffer_name : str
+            info_buffer_name : str
+            weights_buffer_name : str, optional
+            dimension=3 : int, optional
+                layout dimension
+            penalty_name : str, optional
+            penalty_parameters_buffer_name : str, optional
+            attractive_penalty_name : str, optional
+            repulsive_penalty_name : str, optional
+            use_shortest_path : str, optional
+            constraint_name : str, optional
+            constraint_anchors_buffer_name : str, optional
 
         """
         super().__init__(
@@ -147,7 +162,15 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
         )
 
     def start(self, steps=100, iters_by_step=3):
-        for i in range(steps):
+        """This method starts the network layout algorithm.
+
+        Parameters:
+        -----------
+            steps : int
+            iters_by_step: int
+
+        """
+        for _ in range(steps):
             self._positions_torch = self.mde.embed(
                     self._positions_torch,
                     max_iter=iters_by_step)
@@ -252,7 +275,7 @@ class MDE(NetworkLayoutIPCRender):
 
     def _command_string(
             self, steps=100, iters_by_step=3,):
-        """Returns the python code which starts the MDEServer
+        """This will return the python code which starts the MDEServer
 
         Parameters:
         -----------
