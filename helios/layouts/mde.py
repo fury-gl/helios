@@ -46,7 +46,7 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
         """Reads the network information from the shared memory resources
         and performs the MDE layout algorithm
 
- 
+
         """
         super().__init__(
             edges_buffer_name,
@@ -148,12 +148,7 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
 
     def start(self, steps=100, iters_by_step=3):
         for i in range(steps):
-            if i == 0:
-                self._positions_torch = self.mde.embed(
-                    self._positions_torch,
-                    max_iter=iters_by_step)
-            else:
-                self._positions_torch = self.mde.embed(
+            self._positions_torch = self.mde.embed(
                     self._positions_torch,
                     max_iter=iters_by_step)
 
