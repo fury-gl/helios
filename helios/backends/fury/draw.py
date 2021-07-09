@@ -61,4 +61,10 @@ class NetworkDraw(NetworkSuperActor):
                 **kwargs
             )
         self.showm = showm
+        self.iren = showm.iren
+        self.window = showm.window
         self.Render = self.showm.window.Render
+
+    def refresh(self):
+        self.window.Render()
+        self.iren.Render()

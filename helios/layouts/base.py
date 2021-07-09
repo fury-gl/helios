@@ -22,10 +22,9 @@ class NetworkLayout(ABC):
     def positions(self, new_positions):
         self._positions = new_positions
 
-    def update_in_vtk(self):
-        self._super_actor.positions = self._positions
-        self._super_actor.update()
-        self.window.Render()
+    def update(self):
+        self._network_draw.positions = self._positions
+        self._network_draw.refresh()
 
 
 class NetworkLayoutAsync(NetworkLayout, metaclass=ABCMeta):
@@ -115,7 +114,7 @@ class NetworkLayoutIPCServerCalc(ABC):
 
     def _update(self, positions):
         """This method update the shared memory resource
-        which stores the network positions. Usually, you
+        which stores the network positions. Usualy, you
         should call this in the start method implementation
 
         Parameters:
@@ -125,12 +124,9 @@ class NetworkLayoutIPCServerCalc(ABC):
         """
         self._shm_manager.positions._repr[:] = positions.astype('float32')
         self._shm_manager.info._repr[0] = time.time()
-  
-    def cleanup(self):
-        self._shm_manager.cleanup()
-  
+
     def __del__(self):
-        self.cleanup()
+        self._shm_manager.cleanup()
 
 
 class NetworkLayoutIPCRender(ABC):
@@ -148,6 +144,8 @@ class NetworkLayoutIPCRender(ABC):
         """
         self._started = False
         self._interval_timer = None
+        self._id_observer = None
+        self._id_timer = None
         self._pserver = None
         self._network_draw = network_draw
         self._dimension = 2 if network_draw._is_2d else 3
@@ -197,12 +195,14 @@ class NetworkLayoutIPCRender(ABC):
         """
         ...
 
-    def _update(self):
+    def update(self):
         self._network_draw.positions = self._shm_manager.positions._repr.\
             astype('float64')
-        self._network_draw.Render()
+        self._network_draw.refresh()
 
-    def start(self, ms=30, steps=100, iters_by_step=2):
+    def start(
+            self, ms=30, steps=100, iters_by_step=2,
+            without_iren_start=True):
         """This method starts the network layout algorithm creating a
         new subprocess. Right after the network layout algorithm
         finish the computation (ending of the related subprocess),
@@ -219,7 +219,7 @@ class NetworkLayoutIPCRender(ABC):
                 be updated three times.
             iters_by_step : int
                 number of interations in each step
-
+            without_iren_start : bool, optional, default True
         """
         if self._started:
             return
@@ -231,23 +231,36 @@ class NetworkLayoutIPCRender(ABC):
         self._pserver = subprocess.Popen(
             args,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
+        ms = 12
         if ms > 0:
+            def callback_update_pos(caller, event):
+                should_update = self._check_and_sync()
+                if should_update:
+                    self.update()
 
-            def callback():
-                last_update = self._shm_manager.info._repr[0]
-                # if stop has been called inside the treading timer
-                # maybe another callback can be executed
-                if self._pserver is None:
-                    return
-                # if the process finished then stop the callback
-                if not is_running(self._pserver, 0):
-                    self.stop()
-                self._last_update = last_update
-                self._update()
-
-            self._interval_timer = IntervalTimer(
-                    ms/1000, callback)
+            if not without_iren_start:
+                self._id_observer = \
+                    self._network_draw.iren.AddObserver(
+                        "TimerEvent", callback_update_pos)
+                self._id_timer = \
+                    self._network_draw.iren.CreateRepeatingTimer(ms)
+            else:
+                self._interval_timer = IntervalTimer(
+                        ms/1000, callback_update_pos, *[None, None])
         self._started = True
+
+    def _check_and_sync(self):
+        last_update = self._shm_manager.info._repr[0]
+        # if stop has been called inside the treading timer
+        # maybe another callback can be executed
+        if self._pserver is None:
+            return False
+        # if the process finished then stop the callback
+        if not is_running(self._pserver, 0):
+            self.stop()
+            return False
+        self._last_update = last_update
+        return True
 
     def stop(self):
         """Stop the layout algorithm
@@ -258,6 +271,14 @@ class NetworkLayoutIPCRender(ABC):
         if self._interval_timer is not None:
             self._interval_timer.stop()
             self._interval_timer = None
+
+        if self._id_timer is not None:
+            self._network_draw.iren.DestroyTimer(self._id_timer)
+            self._id_timer = None
+
+        if self._id_observer is not None:
+            self._network_draw.iren.RemoveObserver(self._id_observer)
+            self._id_observer = None
 
         if self._pserver is not None:
             self._pserver.kill()

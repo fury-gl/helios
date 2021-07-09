@@ -16,11 +16,10 @@ class HeliosFr(NetworkLayoutAsync):
     ):
 
         self._started = False
-        self.window = network_draw.showm.window
+        self._network_draw = network_draw
         self._interval_timer = None
         self._nodes_count = network_draw.positions.shape[0]
         self._update_interval_workers = update_interval_workers
-        self._super_actor = network_draw
 
         self._positions = np.ascontiguousarray(
             network_draw.positions, dtype=np.float32)
@@ -45,10 +44,8 @@ class HeliosFr(NetworkLayoutAsync):
             if ms < self._update_interval_workers:
                 ms = self._update_interval_workers
 
-            def callback():
-                self.update_in_vtk()
             self._interval_timer = IntervalTimer(
-                    ms/1000, callback)
+                     ms/1000, self.update)
 
     def stop(self):
         if not self._started:
@@ -57,9 +54,10 @@ class HeliosFr(NetworkLayoutAsync):
         if self._interval_timer is not None:
             self._interval_timer.stop()
             self._interval_timer = None
+
         self._layout.stop()
         self._started = False
 
     def steps(self, iterations=1):
         self._layout.iterate(iterations=iterations)
-        self.update_in_vtk()
+        self.update()

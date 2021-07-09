@@ -1,4 +1,5 @@
 import numpy as np
+import time
 import pymde
 
 from fury import window
@@ -7,7 +8,7 @@ from helios import NetworkDraw
 from helios.layouts import MDE
 
 
-def test_mde_penaltie(interactive=False):
+def test_mde_penalty(interactive=False):
     n_items = 20
     edges = pymde.all_edges(n_items).cpu().numpy()
     np.delete(edges, [1, 3, 5, 7])
@@ -20,8 +21,8 @@ def test_mde_penaltie(interactive=False):
     mde = MDE(
         edges, network,
         use_shortest_path=False,
-        penaltie_name='logistic',
-        penaltie_parameters=[.4, .5],
+        penalty_name='logistic',
+        penalty_parameters=[.4, .5],
         constraint_name='standardized'
     )
     # before start, this element represents if
@@ -32,8 +33,13 @@ def test_mde_penaltie(interactive=False):
     if interactive:
         window.show(network.showm.scene)
 
+    time.sleep(1)
+    i = 0
     while mde._started:
-        ...
+        i += 1
+        time.sleep(1/10)
+        if i > 100:
+            raise TimeoutError('MDE timeout error')
     assert mde._shm_manager.info._repr[1] == 1
     mde._shm_manager.cleanup()
 
@@ -61,7 +67,12 @@ def test_mde(interactive=False):
     if interactive:
         window.show(network.showm.scene)
 
+    time.sleep(1)
+    i = 0
     while mde._started:
-        ...
+        i += 1
+        time.sleep(1/10)
+        if i > 100:
+            raise TimeoutError('MDE timeout error')
     assert mde._shm_manager.info._repr[1] == 1
     mde._shm_manager.cleanup()

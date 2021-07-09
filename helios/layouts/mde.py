@@ -217,7 +217,7 @@ class MDE(NetworkLayoutIPCRender):
         else:
             self._penalty_parameters = None
 
-        self._update()
+        self.update()
 
     def _command_string(
             self, steps=100, iters_by_step=3,):
