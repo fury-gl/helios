@@ -1,4 +1,5 @@
-"""Module that provide some objects to deal with inter-process communication"""
+"""Module that provides some objects to deal with inter-process communication
+"""
 
 import numpy as np
 from abc import ABC, abstractmethod
@@ -43,7 +44,7 @@ class GenericArrayBufferManager(ABC):
 class SharedMemArrayManager(GenericArrayBufferManager):
     def __init__(
             self,  dimension, dtype, data=None, buffer_name=None):
-        """An implementation of GenericArrayBufferManager using SharedMemory
+        """An implementation of a GenericArrayBufferManager using SharedMemory
 
         Parameters:
         -----------
@@ -111,6 +112,7 @@ class ShmManagerMultiArrays:
     def __init__(self):
         """This Obj. allows to deal with multiple arrays
         stored using SharedMemory
+
         """
         self._shm_attr_names = []
 
@@ -118,6 +120,7 @@ class ShmManagerMultiArrays:
         """This creates a shared memory resource
         to store the data. The shared memory obj will be accessible
         through
+
         >>> self.attr_name
 
         Parameters:
@@ -143,6 +146,7 @@ class ShmManagerMultiArrays:
         into the current ShmManagerMultiArrays
         The shared memory obj will be accessible
         through
+
         >>> self.attr_name
 
         Parameters:
