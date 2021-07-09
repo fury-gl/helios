@@ -54,10 +54,13 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
             self._shm_manager.positions._repr)
         edges_torch = torch.tensor(
             self._shm_manager.edges._repr)
+       
         if weights_buffer_name is not None:
-            weights_torch = torch.tensor(self._shm_manager.weights._repr)
+            weights_torch = torch.tensor(
+                self._shm_manager.weights._repr)
         else:
             weights_torch = torch.ones(edges_torch.shape[0])
+       
         if use_shortest_path and penalty_name is None:
             g_torch = pymde.Graph.from_edges(edges_torch, weights_torch)
             shortest_paths_graph = pymde.preprocess.graph.shortest_paths(
@@ -66,10 +69,10 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
             distortion = pymde.losses.WeightedQuadratic(
                 shortest_paths_graph.distances)
         elif penalty_name is None:
-            distortion = pymde.penalties.Quadratic(weights_torch)
+            distortion = pymde.penalties.WeightedQuadratic(weights_torch)
         else:
             if penalty_name in _PENALTIES.keys():
-                func = distortion = _PENALTIES[penalty_name]
+                func = _PENALTIES[penalty_name]
                 if penalty_name == 'pushandpull':
                     if attractive_penalty_name not in _PENALTIES.keys() or\
                          repulsive_penalty_name not in _PENALTIES.keys():
@@ -229,6 +232,10 @@ class MDE(NetworkLayoutIPCRender):
         s += 'positions_buffer_name='
         s += f'"{self._shm_manager.positions._buffer_name}",'
         s += f'info_buffer_name="{self._shm_manager.info._buffer_name}",'
+        if 'weights' in self._shm_manager._shm_attr_names:
+            s += 'weights_buffer_name='
+            s += f'"{self._shm_manager.weights._buffer_name}",'
+
         s += f'use_shortest_path={self._use_shortest_path},'
         if self._constraint_name is not None:
             s += f'constraint_name="{self._constraint_name}",'
