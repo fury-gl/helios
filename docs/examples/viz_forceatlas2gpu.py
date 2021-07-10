@@ -1,8 +1,18 @@
+"""
+=======================================================
+ForceAtlas2 using cugraph
+=======================================================
+
+The goal of this example is to show how to use the Helios Network 
+draw with the ForceAtlas2 from cugraph. To run this you should 
+have python 3.8 or greater and cudf/cugraph installed.
+
+"""
 import numpy as np
 import networkx as nx
 
 from helios import NetworkDraw
-from helios.layouts import ForceAtlas2 
+from helios.layouts import ForceAtlas2
 
 size = 1000
 s = size

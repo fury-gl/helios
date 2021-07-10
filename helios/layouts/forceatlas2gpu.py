@@ -19,6 +19,24 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
         info_buffer_name,
         weights_buffer_name=None,
     ):
+        """This Obj. reads the network information stored in a shared memory
+        resource and execute the ForceAtlas2 layout algorithm
+
+        Parameters:
+        -----------
+            edges_buffer_name : str
+            positions_buffer_name : str
+            info_buffer_name : str
+            weights_buffer_name : str, optional
+            penalty_name : str, optional
+            penalty_parameters_buffer_name : str, optional
+            attractive_penalty_name : str, optional
+            repulsive_penalty_name : str, optional
+            use_shortest_path : str, optional
+            constraint_name : str, optional
+            constraint_anchors_buffer_name : str, optional
+
+        """
         super().__init__(
             edges_buffer_name,
             positions_buffer_name,
@@ -50,7 +68,7 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
             self._G.from_cudf_edgelist(df)
 
     def start(self, steps=100, iters_by_step=3):
-        for i in range(steps):
+        for _ in range(steps):
             self._pos_cudf = cg.layout.force_atlas2(
                 self._G,
                 max_iter=iters_by_step,
@@ -79,7 +97,37 @@ class ForceAtlas2(NetworkLayoutIPCRender):
         edges,
         network_draw,
         weights=None,
+        lin_log_mode=False,
+        edge_weight_influence=1.0,
+        jitter_tolerance=1.0,
+        barnes_hut_optimize=True,
+        barnes_hut_theta=1.0,
+        scaling_ratio=2.0,
+        strong_gravity_mode=False,
+        gravity=1.0,
     ):
+        """A object which performs the ForceAtlas2 algorithm
+        using the cugraph lib. The ForceAtlas will be called inside
+        of a different process which comunicates
+        with this object through the SharedMemory from python>=3.8.
+
+
+        Parameters:
+        -----------
+            edges : ndarray
+            network_draw : NetworkDraw
+            weights: array, optional
+                edge weights
+            lin_log_mode : bool, default False
+            edge_weight_influence : float, default 1.0
+            jitter_tolerance : float, default 1.0
+            barnes_hut_optimize : bool, default True
+            barnes_hut_theta : float, default 1.0
+            scaling_ratio : float, default 2.0
+            strong_gravity_mode : bool, default False
+            gravity : float, default 1.0
+
+        """
 
         super().__init__(
             network_draw,
@@ -92,10 +140,31 @@ class ForceAtlas2(NetworkLayoutIPCRender):
         if not CUDF_AVAILABLE:
             raise ImportError(' You need to install cugraph and cudf first')
 
+        self.lin_log_mode = lin_log_mode
+        self.edge_weight_influence = edge_weight_influence
+        self.jitter_tolerance = jitter_tolerance
+        self.barnes_hut_optimize = barnes_hut_optimize
+        self.barnes_hut_theta = barnes_hut_theta
+        self.scaling_ratio = scaling_ratio
+        self.strong_gravity_mode = strong_gravity_mode
+        self.gravity = gravity
+
         self.update()
 
     def _command_string(
             self, steps=100, iters_by_step=3,):
+        """This will return the python code which starts the ForceAtlas2ServerCalc
+
+        Parameters:
+        -----------
+            steps : int, optional, default 100
+            iters_by_step : int, optional, default 3
+
+        Returns
+        -------
+            s : str
+
+        """
         s = 'from helios.layouts.forceatlas2gpu import ForceAtlas2ServerCalc;'
         s += 'from fury.stream.tools import remove_shm_from_resource_tracker;'
         s += 'remove_shm_from_resource_tracker();'
@@ -104,6 +173,22 @@ class ForceAtlas2(NetworkLayoutIPCRender):
         s += 'positions_buffer_name='
         s += f'"{self._shm_manager.positions._buffer_name}",'
         s += f'info_buffer_name="{self._shm_manager.info._buffer_name}",'
+        s += 'lin_log_mode ='
+        s += f'{self.lin_log_mode},'
+        s += 'edge_weight_influence ='
+        s += f'{self.edge_weight_influence},'
+        s += 'jitter_tolerance ='
+        s += f'{self.jitter_tolerance},'
+        s += 'barnes_hut_optimize ='
+        s += f'{self.barnes_hut_optimize},'
+        s += 'barnes_hut_theta ='
+        s += f'{self.barnes_hut_theta},'
+        s += 'scaling_ratio ='
+        s += f'{self.scaling_ratio},'
+        s += 'strong_gravity_mode ='
+        s += f'{self.strong_gravity_mode},'
+        s += 'gravity ='
+        s += f'{self.gravity},'
         s += ');'
         s += f'force_atlas.start({steps},{iters_by_step});'
         return s
