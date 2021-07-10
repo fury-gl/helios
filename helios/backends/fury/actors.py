@@ -85,7 +85,7 @@ class FurySuperNode:
             effects += [window.gl_enable_depth]
         else:
             effects += [window.gl_disable_depth]
-        
+      
         blendings = {
             'additive': window.gl_set_additive_blending,
             'subtractive': window.gl_set_subtractive_blending,
@@ -127,20 +127,22 @@ class FurySuperNode:
         self.vtk_actor = actor
         # update to correct positions
 
-    def _init_marker_property(self, marker):
-        
+    def _init_marker_property(self, data):
         if self._marker_is_uniform:
-            marker_value = _MARKER2Id[marker]
+            if isinstance(data, str):
+                data = _MARKER2Id[data]
             self.uniforms_list.append(
                 Uniform(
-                    name='marker', uniform_type='f', value=marker_value))
+                    name='marker', uniform_type='f', value=data))
         else:
-            list_of_markers = [_MARKER2Id[i] for i in marker]
-
-            list_of_markers = np.repeat(list_of_markers, 4).astype('float')
+            if isinstance(data[0], str):
+                data = [_MARKER2Id[i] for i in data]
+            data = np.repeat(data, 4).astype('float')
             attribute_to_actor(
                 self.vtk_actor,
-                list_of_markers, 'vMarker')
+                data, 'vMarker')
+            self._marker = array_from_actor(
+                self.vtk_actor, array_name="vMarker")
 
     def _init_edge_color_property(self, edge_color):
         if self._edge_color_is_uniform:
@@ -397,7 +399,7 @@ class FurySuperNode:
                 vec3 result = vec3(sdf, minSdf, edgeWidth);
                 return result ;
             }
- 
+
             """
         # shader += """
         #     vec3 getDistFunc(vec2 p, float s, float edgeWidth, int marker){
@@ -541,7 +543,19 @@ class FurySuperNode:
 
     @marker.setter
     def marker(self, data):
-        pass
+        if self._marker_is_3d:
+            raise ValueError('3d markers cannot be changed')
+
+        if self._marker_is_uniform:
+            if isinstance(data, str):
+                data = _MARKER2Id[data]
+            self.Uniforms.marker.value = data
+        else:
+            if isinstance(data[0], str):
+                data = [_MARKER2Id[i] for i in data]
+            self._marker[:] = np.repeat(
+                data, self.centers_length, axis=0)
+            self.update()
 
     @property
     def edge_color(self):
