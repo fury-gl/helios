@@ -673,10 +673,7 @@ class FurySuperEdge:
         colors,
         opacity=.5,
         line_width=3,
-        depth_test=True,
         blending='additive',
-        lod=False,
-        fake_tube=False,
     ):
 
         self.edges = edges
@@ -815,5 +812,4 @@ class NetworkSuperActor():
     def update(self):
         for actor in self.vtk_actors:
             update_actor(actor)
-
 
