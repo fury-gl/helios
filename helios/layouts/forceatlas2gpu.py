@@ -18,6 +18,14 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
         positions_buffer_name,
         info_buffer_name,
         weights_buffer_name=None,
+        lin_log_mode=False,
+        edge_weight_influence=1.0,
+        jitter_tolerance=1.0,
+        barnes_hut_optimize=True,
+        barnes_hut_theta=1.0,
+        scaling_ratio=2.0,
+        strong_gravity_mode=False,
+        gravity=1.0,
     ):
         """This Obj. reads the network information stored in a shared memory
         resource and execute the ForceAtlas2 layout algorithm
@@ -28,13 +36,14 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
             positions_buffer_name : str
             info_buffer_name : str
             weights_buffer_name : str, optional
-            penalty_name : str, optional
-            penalty_parameters_buffer_name : str, optional
-            attractive_penalty_name : str, optional
-            repulsive_penalty_name : str, optional
-            use_shortest_path : str, optional
-            constraint_name : str, optional
-            constraint_anchors_buffer_name : str, optional
+            lin_log_mode : bool, default False
+            edge_weight_influence : float, default 1.0
+            jitter_tolerance : float, default 1.0
+            barnes_hut_optimize : bool, default True
+            barnes_hut_theta : float, default 1.0
+            scaling_ratio : float, default 2.0
+            strong_gravity_mode : bool, default False
+            gravity : float, default 1.0
 
         """
         super().__init__(
@@ -67,6 +76,15 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
 
             self._G.from_cudf_edgelist(df)
 
+        self.lin_log_mode = lin_log_mode
+        self.edge_weight_influence = edge_weight_influence
+        self.jitter_tolerance = jitter_tolerance
+        self.barnes_hut_optimize = barnes_hut_optimize
+        self.barnes_hut_theta = barnes_hut_theta
+        self.scaling_ratio = scaling_ratio
+        self.strong_gravity_mode = strong_gravity_mode
+        self.gravity = gravity
+
     def start(self, steps=100, iters_by_step=3):
         for _ in range(steps):
             self._pos_cudf = cg.layout.force_atlas2(
@@ -74,14 +92,14 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
                 max_iter=iters_by_step,
                 pos_list=self._pos_cudf,
                 outbound_attraction_distribution=True,
-                lin_log_mode=False,
-                edge_weight_influence=1.0,
-                jitter_tolerance=1.0,
-                barnes_hut_optimize=True,
-                barnes_hut_theta=1.0,
-                scaling_ratio=2.0,
-                strong_gravity_mode=False,
-                gravity=1.0,
+                lin_log_mode=self.lin_log_mode,
+                edge_weight_influence=self.edge_weight_influence,
+                jitter_tolerance=self.jitter_tolerance,
+                barnes_hut_optimize=self.barnes_hut_optimize,
+                barnes_hut_theta=self.barnes_hut_theta,
+                scaling_ratio=self.scaling_raio,
+                strong_gravity_mode=self.strong_gravity_mode,
+                gravity=self.gravity,
                 verbose=False,
                 callback=None)
 
