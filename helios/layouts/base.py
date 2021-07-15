@@ -65,6 +65,8 @@ def is_running(p, timeout=0):
 class NetworkLayoutIPCServerCalc(ABC):
     def __init__(
         self,
+        num_nodes,
+        num_edges,
         edges_buffer_name,
         positions_buffer_name,
         info_buffer_name,
@@ -77,6 +79,8 @@ class NetworkLayoutIPCServerCalc(ABC):
 
         Parameters:
         ----------
+            num_nodes : int
+            num_edges : int
             edges_buffer_name : str
             positions_buffer_name : str
             info_buffer_name : str
@@ -89,19 +93,20 @@ class NetworkLayoutIPCServerCalc(ABC):
         self._shm_manager = ShmManagerMultiArrays()
         self._shm_manager.load_array(
             'info', buffer_name=info_buffer_name, dimension=1,
-            dtype='float32')
+            dtype='float32',)
         self._shm_manager.load_array(
             'positions', buffer_name=positions_buffer_name,
             dimension=self._dimension,
-            dtype='float32')
+            dtype='float32', num_elements=num_nodes)
 
         self._shm_manager.load_array(
-            'edges', buffer_name=edges_buffer_name, dimension=2, dtype='int64')
+            'edges', buffer_name=edges_buffer_name,
+            dimension=2, dtype='int64', num_elements=num_edges)
 
         if weights_buffer_name is not None:
             self._shm_manager.load_array(
                 'weights', buffer_name=weights_buffer_name,
-                dimension=1, dtype='float32')
+                dimension=1, dtype='float32', num_elements=num_edges)
 
     @abstractmethod
     def start(self, steps=100, iters_by_step=3):
@@ -125,7 +130,7 @@ class NetworkLayoutIPCServerCalc(ABC):
             positions : ndarray
 
         """
-        self._shm_manager.positions._repr[:] = positions.astype('float32')
+        self._shm_manager.positions.data = positions
         self._shm_manager.info._repr[0] = time.time()
 
     def __del__(self):
@@ -178,6 +183,8 @@ class NetworkLayoutIPCRender(ABC):
                 1,
                 'float32'
             )
+        self._num_nodes = network_draw.positions.shape[0]
+        self._num_edges = edges.shape[0]
 
     @abstractmethod
     def _command_string(self, steps, iters_by_step):
