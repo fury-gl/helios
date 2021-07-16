@@ -212,8 +212,7 @@ class NetworkLayoutIPCRender(ABC):
         and right after that refresh the network draw
 
         """
-        self._network_draw.positions = self._shm_manager.positions._repr.\
-            astype('float64')
+        self._network_draw.positions = self._shm_manager.positions.data
         self._network_draw.refresh()
 
     def start(
