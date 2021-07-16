@@ -30,6 +30,8 @@ _PENALTIES = {
 class MDEServerCalc(NetworkLayoutIPCServerCalc):
     def __init__(
         self,
+        num_nodes,
+        num_edges,
         edges_buffer_name,
         positions_buffer_name,
         info_buffer_name,
@@ -37,17 +39,21 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
         dimension=3,
         penalty_name=None,
         penalty_parameters_buffer_name=None,
+        num_penalty_parameters=None,
         attractive_penalty_name='log1p',
         repulsive_penalty_name='log',
         use_shortest_path=False,
         constraint_name=None,
         constraint_anchors_buffer_name=None,
+        num_anchors=None,
     ):
         """This Obj. reads the network information stored in a shared memory
         resource and execute the MDE layout algorithm
 
         Parameters:
         -----------
+            num_nodes : int
+            num_edges : int
             edges_buffer_name : str
             positions_buffer_name : str
             info_buffer_name : str
@@ -56,14 +62,18 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
                 layout dimension
             penalty_name : str, optional
             penalty_parameters_buffer_name : str, optional
+            num_penalty_parameters : int, optional
             attractive_penalty_name : str, optional
             repulsive_penalty_name : str, optional
             use_shortest_path : str, optional
             constraint_name : str, optional
             constraint_anchors_buffer_name : str, optional
+            num_anchors : int, optional
 
         """
         super().__init__(
+            num_nodes,
+            num_edges,
             edges_buffer_name,
             positions_buffer_name,
             info_buffer_name,
@@ -71,13 +81,13 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
             dimension,
         )
         self._positions_torch = torch.tensor(
-            self._shm_manager.positions._repr)
+            self._shm_manager.positions.data)
         edges_torch = torch.tensor(
-            self._shm_manager.edges._repr)
+            self._shm_manager.edges.data)
 
         if weights_buffer_name is not None:
             weights_torch = torch.tensor(
-                self._shm_manager.weights._repr)
+                self._shm_manager.weights.data)
         else:
             weights_torch = torch.ones(edges_torch.shape[0])
 
@@ -108,11 +118,12 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
                         'penalty_parameters',
                         penalty_parameters_buffer_name,
                         1,
-                        'float32'
+                        'float32',
+                        num_penalty_parameters
                     )
                     distortion = func(
                         weights_torch,
-                        *self._shm_manager.penalty_parameters._repr)
+                        *self._shm_manager.penalty_parameters.data)
                 else:
                     distortion = func(weights_torch)
             else:
@@ -132,14 +143,16 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
                         'anchors',
                         constraint_anchors_buffer_name,
                         self._dimension+1,
-                        'float32'
+                        'float32',
+                        num_anchors 
                     )
                     torch_anchors = torch.tensor(
-                        self._shm_manager.anchors._repr[:, self._dimension]
-                            .astype('int64')
+                        self._shm_manager.anchors._repr[
+                            0:num_anchors, self._dimension].astype('int64')
                     )
                     torch_anchors_pos = torch.tensor(
-                        self._shm_manager.anchors._repr[:, 0:self._dimension]
+                        self._shm_manager.anchors._repr[
+                            0:num_anchors, 0:self._dimension]
                     )
 
                     print(torch_anchors_pos)
@@ -291,6 +304,10 @@ class MDE(NetworkLayoutIPCRender):
         s += 'from fury.stream.tools import remove_shm_from_resource_tracker;'
         s += 'remove_shm_from_resource_tracker();'
         s += 'mde_h = MDEServerCalc('
+        s += 'num_nodes='
+        s += f'{self._num_nodes},'
+        s += 'num_edges='
+        s += f'{self._num_edges},'
         s += f'edges_buffer_name="{self._shm_manager.edges._buffer_name}",'
         s += 'positions_buffer_name='
         s += f'"{self._shm_manager.positions._buffer_name}",'
@@ -305,6 +322,9 @@ class MDE(NetworkLayoutIPCRender):
             if self._constraint_name == 'anchored':
                 s += 'constraint_anchors_buffer_name='
                 s += f'"{self._shm_manager.anchors._buffer_name}",'
+                s += 'num_anchors='
+                s += f'{self._shm_manager.anchors._num_elements},'
+
         if self._penalty_name is not None:
             s += f'penalty_name="{self._penalty_name}",'
 
@@ -315,6 +335,8 @@ class MDE(NetworkLayoutIPCRender):
         if self._penalty_parameters is not None:
             s += 'penalty_parameters_buffer_name='
             s += f'"{self._shm_manager.penalty_parameters._buffer_name}",'
+            s += 'num_penalty_parameters='
+            s += f'{self._shm_manager.penalty_parameters._num_elements},'
         s += f'dimension={self._dimension});'
         s += f'mde_h.start({steps},{iters_by_step});'
         return s

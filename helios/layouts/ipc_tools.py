@@ -15,7 +15,7 @@ else:
 
 class GenericArrayBufferManager(ABC):
     def __init__(
-            self, dimension, dtype='float64'):
+            self, dimension, dtype='float64', num_elements=None):
         """This implements a abstract (generic) ArrayBufferManager.
         The GenericArrayBufferManager is used for example to share the
         positions, edges and weights between different process.
@@ -24,9 +24,13 @@ class GenericArrayBufferManager(ABC):
         ----------
         dimension : int
         dtype : dtype
+        num_elements : int, optional
+                In MacOs a shared memory resource can be created with
+                a different number of elements then the original data
         """
         self._dtype = dtype
         self._dimension = dimension
+        self._num_elements = num_elements
 
     @abstractmethod
     def load_mem_resource(self):
@@ -43,7 +47,8 @@ class GenericArrayBufferManager(ABC):
 
 class SharedMemArrayManager(GenericArrayBufferManager):
     def __init__(
-            self,  dimension, dtype, data=None, buffer_name=None):
+            self,  dimension, dtype, data=None, buffer_name=None,
+            num_elements=None):
         """An implementation of a GenericArrayBufferManager using SharedMemory
 
         Parameters:
@@ -57,8 +62,11 @@ class SharedMemArrayManager(GenericArrayBufferManager):
             buffer_name : str
                 buffer_name, if you pass that, then
                 this Obj. will try to load the memory resource
+            num_elements : int, optional
+                In MacOs a shared memory resource can be created with
+                a different number of elements then the original data
         """
-        super().__init__(dimension, dtype)
+        super().__init__(dimension, dtype, num_elements)
         self._released = False
         if buffer_name is None:
             self.create_mem_resource(data)
@@ -66,11 +74,16 @@ class SharedMemArrayManager(GenericArrayBufferManager):
             self.load_mem_resource(buffer_name)
 
     def create_mem_resource(self, data):
+        self._num_elements = data.shape[0]
         self._buffer = shared_memory.SharedMemory(
                         create=True, size=data.nbytes)
         self._created = True
         self.create_repr()
-        self._repr[:] = data
+
+        if self._repr.shape[0] >= data.shape[0]:
+            self._repr[0:data.shape[0]] = data
+        else:
+            self._repr[:] = data
 
     def load_mem_resource(self, buffer_name):
         self._buffer = shared_memory.SharedMemory(buffer_name)
@@ -79,11 +92,11 @@ class SharedMemArrayManager(GenericArrayBufferManager):
 
     def create_repr(self):
         s_bytes = np.array([1], dtype=self._dtype).nbytes
-        self._num_nodes = self._buffer.size//s_bytes//self._dimension
+        self._num_elements_buffer = self._buffer.size//s_bytes//self._dimension
         if self._dimension == 1:
-            shape = self._num_nodes
+            shape = self._num_elements_buffer
         else:
-            shape = (self._num_nodes, self._dimension)
+            shape = (self._num_elements_buffer, self._dimension)
         self._repr = np.ndarray(
                     shape,
                     dtype=self._dtype,
@@ -106,6 +119,18 @@ class SharedMemArrayManager(GenericArrayBufferManager):
                 print(f'Shared Memory {self._buffer_name}\
                         File not found')
         self._released = True
+
+    @property
+    def data(self):
+        return self._repr[0:self._num_elements]
+
+    @data.setter
+    def data(self, data):
+        equal_dim = self._repr.shape[1] == data.shape[1]
+        if self._repr.shape[0] > data.shape[0] and equal_dim:
+            self._repr[0:data.shape[0]] = data.astype(self._dtype)
+        elif self._repr.shape[0] == data.shape[0] and equal_dim:
+            self._repr[:] = data.astype(self._dtype)
 
 
 class ShmManagerMultiArrays:
@@ -141,7 +166,9 @@ class ShmManagerMultiArrays:
         self._shm_attr_names.append(attr_name)
         setattr(self, attr_name, _shm)
 
-    def load_array(self, attr_name, buffer_name, dimension, dtype):
+    def load_array(
+            self, attr_name, buffer_name, dimension, dtype,
+            num_elements=None):
         """This will load the shared memory resource associate with buffer_name
         into the current ShmManagerMultiArrays
         The shared memory obj will be accessible
@@ -157,13 +184,17 @@ class ShmManagerMultiArrays:
             buffer_name : str
             dimension : int
             dtype : str
+            num_elements : int, optional
+                In MacOs a shared memory resource can be created with
+                a different number of elements then the original data
 
         """
         if attr_name in self._shm_attr_names:
             raise ValueError(f'A Shared Memory array with the name {attr_name}\
                 is already in this ShmManager')
         _shm = SharedMemArrayManager(
-            buffer_name=buffer_name, dimension=dimension, dtype=dtype)
+            buffer_name=buffer_name, dimension=dimension, dtype=dtype,
+            num_elements=num_elements)
         self._shm_attr_names.append(attr_name)
         setattr(self, attr_name, _shm)
 
