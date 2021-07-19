@@ -85,7 +85,7 @@ class FurySuperNode:
             effects += [window.gl_enable_depth]
         else:
             effects += [window.gl_disable_depth]
-        
+
         blendings = {
             'additive': window.gl_set_additive_blending,
             'subtractive': window.gl_set_subtractive_blending,
@@ -116,31 +116,33 @@ class FurySuperNode:
 
         attribute_to_actor(actor, big_centers, 'center')
 
-        self.centers_geo = array_from_actor(actor, array_name="center")
-        self.centers_geo_orig = np.array(self.centers_geo)
-        self.centers_length = self.centers_geo.shape[0] / num_nodes
-        self.verts_geo = vertices_from_actor(actor)
-        self.verts_geo_orig = np.array(self.verts_geo)
+        self._centers_geo = array_from_actor(actor, array_name="center")
+        self._centers_geo_orig = np.array(self._centers_geo)
+        self._centers_length = int(self._centers_geo.shape[0] / num_nodes)
+        self._verts_geo = vertices_from_actor(actor)
+        self._verts_geo_orig = np.array(self._verts_geo)
 
         self._colors_geo = array_from_actor(actor, array_name="colors")
 
         self.vtk_actor = actor
         # update to correct positions
 
-    def _init_marker_property(self, marker):
-        
+    def _init_marker_property(self, data):
         if self._marker_is_uniform:
-            marker_value = _MARKER2Id[marker]
+            if isinstance(data, str):
+                data = _MARKER2Id[data]
             self.uniforms_list.append(
                 Uniform(
-                    name='marker', uniform_type='f', value=marker_value))
+                    name='marker', uniform_type='f', value=data))
         else:
-            list_of_markers = [_MARKER2Id[i] for i in marker]
-
-            list_of_markers = np.repeat(list_of_markers, 4).astype('float')
+            if isinstance(data[0], str):
+                data = [_MARKER2Id[i] for i in data]
+            data = np.repeat(data, 4).astype('float')
             attribute_to_actor(
                 self.vtk_actor,
-                list_of_markers, 'vMarker')
+                data, 'vMarker')
+            self._marker = array_from_actor(
+                self.vtk_actor, array_name="vMarker")
 
     def _init_edge_color_property(self, edge_color):
         if self._edge_color_is_uniform:
@@ -397,7 +399,7 @@ class FurySuperNode:
                 vec3 result = vec3(sdf, minSdf, edgeWidth);
                 return result ;
             }
- 
+
             """
         # shader += """
         #     vec3 getDistFunc(vec2 p, float s, float edgeWidth, int marker){
@@ -524,7 +526,9 @@ class FurySuperNode:
     @property
     def edge_width(self):
         if self._edge_width_is_uniform:
-            return self.Uniforms.edgeWidth
+            return self.Uniforms.edgeWidth.value
+        else:
+            return self._edge_width[0::self._centers_length]
 
     @edge_width.setter
     def edge_width(self, data):
@@ -532,20 +536,38 @@ class FurySuperNode:
             self.Uniforms.edgeWidth.value = data
         else:
             self._edge_width[:] = np.repeat(
-                data, self.centers_length, axis=0)
+                data, self._centers_length, axis=0)
             self.update()
 
     @property
     def marker(self):
-        pass
+        if self._marker_is_uniform:
+            return self.Uniforms.marker.value
+        else:
+            return self._marker[::self._centers_length]
 
     @marker.setter
     def marker(self, data):
-        pass
+        if self._marker_is_3d:
+            raise ValueError('3d markers cannot be changed')
+
+        if self._marker_is_uniform:
+            if isinstance(data, str):
+                data = _MARKER2Id[data]
+            self.Uniforms.marker.value = data
+        else:
+            if isinstance(data[0], str):
+                data = [_MARKER2Id[i] for i in data]
+            self._marker[:] = np.repeat(
+                data, self._centers_length, axis=0)
+            self.update()
 
     @property
     def edge_color(self):
-        pass
+        if self._edge_color_is_uniform:
+            return self.Uniforms.edgeColor.value
+        else:
+            return self._edge_color[::self._centers_length]
 
     @edge_color.setter
     def edge_color(self, data):
@@ -553,12 +575,15 @@ class FurySuperNode:
             self.Uniforms.edgeColor.value = data
         else:
             self._edge_color[:] = np.repeat(
-                data, self.centers_length, axis=0)
+                data, self._centers_length, axis=0)
             self.update()
 
     @property
     def marker_opacity(self):
-        pass
+        if self._marker_opacity_is_uniform:
+            return self.Uniforms.markerOpacity.value
+        else:
+            return self._marker_opacity[::self._centers_length]
 
     @marker_opacity.setter
     def marker_opacity(self, data):
@@ -566,12 +591,15 @@ class FurySuperNode:
             self.Uniforms.markerOpacity.value = data
         else:
             self._marker_opacity[:] = np.repeat(
-                data, self.centers_length, axis=0)
+                data, self._centers_length, axis=0)
             self.update()
 
     @property
     def edge_opacity(self):
-        pass
+        if self._edge_opacity_is_uniform:
+            return self.Uniforms.edgeOpacity.value
+        else:
+            return self._edge_opacity[::self._centers_length]
 
     @edge_opacity.setter
     def edge_opacity(self, data):
@@ -579,12 +607,12 @@ class FurySuperNode:
             self.Uniforms.edgeOpacity.value = data
         else:
             self._edge_opacity[:] = np.repeat(
-                data, self.centers_length, axis=0)
+                data, self._centers_length, axis=0)
             self.update()
 
     @property
     def specular_strength(self):
-        pass
+        return self.Uniforms.specularStrength.value
 
     @specular_strength.setter
     def specular_strength(self, data):
@@ -592,48 +620,40 @@ class FurySuperNode:
 
     @property
     def specular_mix(self):
-        pass
+        return self.Uniforms.specularMix.value
 
     @specular_mix.setter
     def specular_mix(self, data):
         self.Uniforms.specularMix.value = data
-     
+
     @property
     def shadow_mix(self):
-        pass
+        return self.Uniforms.shadowMix.value
 
     @shadow_mix.setter
     def shadow_mix(self, data):
         self.Uniforms.shadowMix.value = data
-     
+
     @property
     def positions(self):
-        return self.centers_geo[0::4]
+        return self._centers_geo[0::self._centers_length]
 
     @positions.setter
     def positions(self, positions):
-        """positions never it's a uniform variable
-        """
         # avoids memory corruption
-        self.centers_geo[:] = np.repeat(
-            positions, self.centers_length, axis=0).astype('float64')
-        self.verts_geo[:] = self.verts_geo_orig + self.centers_geo
+        self._centers_geo[:] = np.repeat(
+            positions, self._centers_length, axis=0).astype('float64')
+        self._verts_geo[:] = self._verts_geo_orig + self._centers_geo
         self.update()
 
     @property
     def colors(self):
-        pass
+        return self._colors_geo[0::self._centers_length]
 
     @colors.setter
     def colors(self, new_colors):
-        """
-        Parameters
-        ----------
-
-        new_colors : ndarray N,3 uint8  
-        """
         self._colors_geo[:] = np.repeat(
-            new_colors, self.centers_length, axis=0)
+            new_colors, self._centers_length, axis=0)
 
     def update(self):
         update_actor(self.vtk_actor)
@@ -653,17 +673,14 @@ class FurySuperEdge:
         colors,
         opacity=.5,
         line_width=3,
-        depth_test=True,
         blending='additive',
-        lod=False,
-        fake_tube=False,
     ):
 
         self.edges = edges
         self._num_edges = len(self.edges)
         self.vtk_actor = line_actor(
             np.zeros((self._num_edges, 2, 3)),
-            colors=colors, 
+            colors=colors,
             linewidth=line_width,
             opacity=opacity
         )
@@ -687,7 +704,7 @@ class FurySuperEdge:
             effects += [window.gl_enable_depth]
         else:
             effects += [window.gl_disable_depth]
-        
+
         blendings = {
             'additive': window.gl_set_additive_blending,
             'subtractive': window.gl_set_subtractive_blending,
@@ -708,7 +725,7 @@ class FurySuperEdge:
         """positions never it's a uniform variable
         """
         # avoids memory corruption
-        
+
         edges_positions = vertices_from_actor(self.vtk_actor)
         edges_positions[::2] = positions[self.edges[:, 0]]
         edges_positions[1::2] = positions[self.edges[:, 1]]
@@ -720,12 +737,6 @@ class FurySuperEdge:
 
     @colors.setter
     def colors(self, new_colors):
-        """
-        Parameters
-        ----------
-
-        new_colors : ndarray N,3 uint8 
-        """
         self._colors_geo[:] = new_colors
 
     def update(self):
@@ -795,5 +806,4 @@ class NetworkSuperActor():
     def update(self):
         for actor in self.vtk_actors:
             update_actor(actor)
-
 

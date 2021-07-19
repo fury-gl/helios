@@ -3,6 +3,7 @@ class Uniform:
         """This is used for Uniforms. It's responsible to
         store the value of a given uniform variable and call
         the related vtk_program
+
         Parameters:
         -----------
             name: str
@@ -18,6 +19,7 @@ class Uniform:
                 variable. For example, if uniform_type is 'f' then value
                 should be a float; if uniform_type is '3f' then value
                 should be a 1x3 array.
+
         """
         self.name = name
         self.value = value
@@ -38,9 +40,11 @@ class Uniform:
         """ Given a shader program, this method
         will update the value with the associated uniform variable
         in a draw call
+
         Parameters:
         -----------
             program: vtkmodules.vtkRenderingOpenGL2.vtkShaderProgram
+
         """
         program.__getattribute__(self.vtk_func_uniform)(
                 self.name, self.value)
@@ -54,6 +58,7 @@ class Uniforms:
         """This  creates an object which can store and
         execute all the changes in uniforms variables associated
         with a shader.
+
         Parameters:
         -----------
             uniforms: list of Uniform's
@@ -68,6 +73,7 @@ class Uniforms:
         sq_actor.CustomUniforms = CustomUniforms
         sq_actor.CustomUniforms.edgeWidth = 0.5
         ```
+
         """
         self.uniforms = uniforms
         for obj in self.uniforms:
