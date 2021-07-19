@@ -43,14 +43,15 @@ class NetworkLayoutAsync(NetworkLayout, metaclass=ABCMeta):
 def is_running(p, timeout=0):
     '''Check if the process "p" is running
 
-    Parameters:
+    Parameters
     ----------
-        p : process
-        timeout : float, optional
-            positive float
+    p : process
+    timeout : float, optional
+        positive float
+
     Returns:
     --------
-        running : bool
+    running : bool
 
     '''
     try:
@@ -79,17 +80,17 @@ class NetworkLayoutIPCServerCalc(ABC):
         from the shared memory resources. Usually, this should be used
         inside of a subprocess which will update the network layout positions
 
-        Parameters:
+        Parameters
         ----------
-            num_nodes : int
-            num_edges : int
-            edges_buffer_name : str
-            positions_buffer_name : str
-            info_buffer_name : str
-            weights_buffer_name : str, optional
-            dimension : int
-            snaphosts_buffer_name : str, optional
-            num_snapshots : int, optional
+        num_nodes : int
+        num_edges : int
+        edges_buffer_name : str
+        positions_buffer_name : str
+        info_buffer_name : str
+        weights_buffer_name : str, optional
+        dimension : int
+        snaphosts_buffer_name : str, optional
+        num_snapshots : int, optional
 
         """
         self._dimension = dimension
@@ -124,10 +125,12 @@ class NetworkLayoutIPCServerCalc(ABC):
     def start(self, steps=100, iters_by_step=3):
         """This method starts the network layout algorithm.
 
-        Parameters:
-        -----------
-            steps : int
-            iters_by_step: int
+        Parameters
+        ----------
+        steps : int
+            number of iterations to perform
+        iters_by_step: int
+            number of iterations to perform between each step
 
         """
         ...
@@ -137,9 +140,10 @@ class NetworkLayoutIPCServerCalc(ABC):
         network positions. Usually, you should call this inside of the
         start method implementation
 
-        Parameters:
-        -----------
-            positions : ndarray
+        Parameters
+        ----------
+        positions : ndarray
+            a numpy array with shape (num_nodes, self._dimension)
 
         """
         # self._shm_manager.update_array(if self._record_positions:
@@ -159,12 +163,14 @@ class NetworkLayoutIPCRender(ABC):
         """An abstract class which reads the network information
         and creates the shared memory resources.
 
-        Parameters:
-        -----------
-            network_draw : NetworkDraw
-            edges : ndarray
-                a bi-dimensional array with the edges list
-            weights : array, optional
+        Parameters
+        ----------
+        network_draw : NetworkDraw
+            A NetworkDraw object which will be used to draw the network
+        edges : ndarray
+            a bi-dimensional array with the edges list
+        weights : array, optional
+            a one-dimensional array with the edge weights
 
         """
         self._started = False
@@ -208,18 +214,18 @@ class NetworkLayoutIPCRender(ABC):
         """Should return the python code which will compute
         the layout positions.
 
-        Parameters:
-        -----------
-            steps : int
-                number of steps; snapshots.
-                For example, if you set steps=3 that means the positions will
-                be updated three times.
-            iters_by_step : int
+        Parameters
+        ----------
+        steps : int
+            number of steps; snapshots.
+            For example, if you set steps=3 that means the positions will
+            be updated three times.
+        iters_by_step : int
 
-        Returns:
+        Returns
         --------
-            command_string : str
-                a string with a code that starts the layout algorithm.
+        command_string : str
+            a string with a code that starts the layout algorithm.
 
         """
         ...
@@ -249,22 +255,26 @@ class NetworkLayoutIPCRender(ABC):
 
         Parameters
         -----------
-            ms : float
-                time interval in milleseconds to update the positions inside
-                of the NetworkDraw
-            steps : int
-                number of steps; snapshots.
-                For example, if you set steps=3 that means the positions will
-                be updated three times.
-            iters_by_step : int
-                number of interations in each step
-            record_positions : bool, optional, default True
-            without_iren_start : bool, optional, default True
-                Set this to False if you will start the ShowManager.
-                That is, if you will invoke the following commands
+        ms : float
+            time interval in milleseconds to update the positions inside
+            of the NetworkDraw
+        steps : int
+            number of steps; snapshots.
+            For example, if you set steps=3 that means the positions will
+            be updated three times.
+        iters_by_step : int
+            number of interations in each step
+        record_positions : bool, optional, default True
+            Record the positions of the network
+        without_iren_start : bool, optional, default True
+            Set this to False if you will start the ShowManager.
+            That is, if you will invoke the following commands
 
-                >>> network_draw.showm.initialize()
-                >>> network_draw.showm.start()
+        Examples
+        --------
+
+            >>> network_draw.initialize()
+            >>> network_draw.start()
 
         """
         if self._started:
@@ -318,9 +328,9 @@ class NetworkLayoutIPCRender(ABC):
         2 - If the process responsible to compute the layout positions
         finished the computations
 
-        Returns:
-        --------
-            should_update : bool
+        Returns
+        -------
+        should_update : bool
 
         """
         last_update = self._shm_manager.info._repr[0]

@@ -27,9 +27,8 @@ class NetworkDraw(NetworkSuperActor):
     ):
         """This object is responsible to deal with the drawing of the network.
 
-        Parameters:
-        -----------
-
+        Parameters
+        ----------
         positions : ndarray
             Array of the nodes positions.
         edges : ndarray, optional
@@ -55,7 +54,9 @@ class NetworkDraw(NetworkSuperActor):
         edge_line_width : float or ndarray, optional
             Width of the edges.
         better_performance : bool, optional
+            Improves the performance of the draw function.
         write_frag_depth : bool, optional
+            Writes in the depth buffer.
         window_size : tuple, optional
             Size of the window.
         showm : showm, optional

@@ -4,21 +4,21 @@ class Uniform:
         store the value of a given uniform variable and call
         the related vtk_program
 
-        Parameters:
-        -----------
-            name: str
-                name of the uniform variable
-            uniform_type: str
-                Uniform variable type which will be used inside the shader.
-                Any of this are valid: 1fv, 1iv, 2f, 2fv, 2i, 3f, 3fv,
-                    3uc, 4f, 4fv, 4uc, GroupUpdateTime, Matrix,
-                    Matrix3x3, Matrix4x4, Matrix4x4v, f, i
-                    value: float or ndarray
-            value: type(uniform_type)
-                should be a value which represent's the shader uniform
-                variable. For example, if uniform_type is 'f' then value
-                should be a float; if uniform_type is '3f' then value
-                should be a 1x3 array.
+        Parameters
+        ----------
+        name: str
+            name of the uniform variable
+        uniform_type: str
+            Uniform variable type which will be used inside the shader.
+            Any of this are valid: 1fv, 1iv, 2f, 2fv, 2i, 3f, 3fv,
+                3uc, 4f, 4fv, 4uc, GroupUpdateTime, Matrix,
+                Matrix3x3, Matrix4x4, Matrix4x4v, f, i
+                value: float or ndarray
+        value: type(uniform_type)
+            should be a value which represent's the shader uniform
+            variable. For example, if uniform_type is 'f' then value
+            should be a float; if uniform_type is '3f' then value
+            should be a 1x3 array.
 
         """
         self.name = name
@@ -41,9 +41,10 @@ class Uniform:
         will update the value with the associated uniform variable
         in a draw call
 
-        Parameters:
-        -----------
-            program: vtkmodules.vtkRenderingOpenGL2.vtkShaderProgram
+        Parameters
+        ----------
+        program: vtkmodules.vtkRenderingOpenGL2.vtkShaderProgram
+            A shader program which will be used to update the uniform
 
         """
         program.__getattribute__(self.vtk_func_uniform)(
@@ -59,10 +60,14 @@ class Uniforms:
         execute all the changes in uniforms variables associated
         with a shader.
 
-        Parameters:
+        Parameters
         -----------
-            uniforms: list of Uniform's
-        Example
+        uniforms: list
+            List of Uniform objects.
+
+        Examples
+        --------
+
         ```python
         uniforms = [
             Uniform(name='edgeWidth', uniform_type='f', value=edgeWidth)...
@@ -85,6 +90,9 @@ class Uniforms:
     def __call__(self, _caller, _event, calldata=None,):
         """
         This method should be used as a callback for a vtk Observer
+        which will execute the shader program with the given uniforms
+        variables.
+
         """
         program = calldata
         if program is None:

@@ -52,27 +52,27 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
         """This Obj. reads the network information stored in a shared memory
         resource and execute the MDE layout algorithm
 
-        Parameters:
+        Parameters
         -----------
-            num_nodes : int
-            num_edges : int
-            edges_buffer_name : str
-            positions_buffer_name : str
-            info_buffer_name : str
-            weights_buffer_name : str, optional
-            snapshots_buffer_name : str, optional
-            num_snapshots : int, optional
-            dimension=3 : int, optional
-                layout dimension
-            penalty_name : str, optional
-            penalty_parameters_buffer_name : str, optional
-            num_penalty_parameters : int, optional
-            attractive_penalty_name : str, optional
-            repulsive_penalty_name : str, optional
-            use_shortest_path : str, optional
-            constraint_name : str, optional
-            constraint_anchors_buffer_name : str, optional
-            num_anchors : int, optional
+        num_nodes : int
+        num_edges : int
+        edges_buffer_name : str
+        positions_buffer_name : str
+        info_buffer_name : str
+        weights_buffer_name : str, optional
+        snapshots_buffer_name : str, optional
+        num_snapshots : int, optional
+        dimension=3 : int, optional
+            layout dimension
+        penalty_name : str, optional
+        penalty_parameters_buffer_name : str, optional
+        num_penalty_parameters : int, optional
+        attractive_penalty_name : str, optional
+        repulsive_penalty_name : str, optional
+        use_shortest_path : str, optional
+        constraint_name : str, optional
+        constraint_anchors_buffer_name : str, optional
+        num_anchors : int, optional
 
         """
         super().__init__(
@@ -183,10 +183,12 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
     def start(self, steps=100, iters_by_step=3):
         """This method starts the network layout algorithm.
 
-        Parameters:
-        -----------
-            steps : int
-            iters_by_step: int
+        Parameters
+        ----------
+        steps : int
+            number of iterations
+        iters_by_step: int
+            number of iterations per step
 
         """
         # -1 means the computation has been intialized
@@ -220,29 +222,33 @@ class MDE(NetworkLayoutIPCRender):
         using the PyMDE lib running in a different process which comunicates
         with this object through SharedMemory from python>=3.8
 
-        Parameters:
+        Parameters
         -----------
-            edges : ndarray
-            network_draw : NetworkDraw
-            weights: array, optional
-                edge weights
-            use_shortest_path : bool, optional
-            constraint_name : str, optional
-                centered, standardized or anchored
-            anchors : array, optional
-                a list of vertex that will be anchored
-            anchors_pos : ndarray, optional
-                The positions of the anchored vertex
-            penalty_name : str, optional
-                cubic, huber, invpower, linear, log, log1p, logratio,
-                logistic, power, pushandpull  or quadratic
-            penalty_parameters : array, optional
-            attractive_penalty_name : str, optional
-                cubic, huber, invpower, linear, log, log1p, logratio,
-                logistic, power, pushandpull  or quadratic
-            repulsive_penalty_name : str, optional
-                cubic, huber, invpower, linear, log, log1p, logratio,
-                logistic, power, pushandpull  or quadratic
+        edges : ndarray
+            the edges of the graph. A numpy array of shape (n_edges, 2)
+        network_draw : NetworkDraw
+            a NetworkDraw object
+        weights: array, optional
+            edge weights. A one dimensional array of shape (n_edges, )
+        use_shortest_path : bool, optional
+            If set to True, shortest path is used to compute the layout
+        constraint_name : str, optional
+            centered, standardized or anchored
+        anchors : array, optional
+            a list of vertex that will be anchored
+        anchors_pos : ndarray, optional
+            The positions of the anchored vertex
+        penalty_name : str, optional
+            cubic, huber, invpower, linear, log, log1p, logratio,
+            logistic, power, pushandpull  or quadratic
+        penalty_parameters : array, optional
+            the parameters of the penalty function
+        attractive_penalty_name : str, optional
+            cubic, huber, invpower, linear, log, log1p, logratio,
+            logistic, power, pushandpull  or quadratic
+        repulsive_penalty_name : str, optional
+            cubic, huber, invpower, linear, log, log1p, logratio,
+            logistic, power, pushandpull  or quadratic
 
         """
         super().__init__(
@@ -298,14 +304,17 @@ class MDE(NetworkLayoutIPCRender):
             self, steps=100, iters_by_step=3,):
         """This will return the python code which starts the MDEServer
 
-        Parameters:
-        -----------
-            steps : int, optional, default 100
-            iters_by_step : int, optional, default 3
+        Parameters
+        ----------
+        steps : int, optional, default 100
+            number of iterations
+        iters_by_step : int, optional, default 3
+            number of iterations per step
 
         Returns
         -------
-            s : str
+        s : str
+            the python code to start the MDEServer
 
         """
         s = 'from helios.layouts.mde import MDEServerCalc;'

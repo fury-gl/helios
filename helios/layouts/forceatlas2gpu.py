@@ -32,22 +32,25 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
         """This Obj. reads the network information stored in a shared memory
         resource and execute the ForceAtlas2 layout algorithm
 
-        Parameters:
+        Parameters
         -----------
-            edges_buffer_name : str
-            positions_buffer_name : str
-            info_buffer_name : str
-            weights_buffer_name : str, optional
-            snapshots_buffer_name : str, optional
-            num_snapshots : int, optional
-            lin_log_mode : bool, default False
-            edge_weight_influence : float, default 1.0
-            jitter_tolerance : float, default 1.0
-            barnes_hut_optimize : bool, default True
-            barnes_hut_theta : float, default 1.0
-            scaling_ratio : float, default 2.0
-            strong_gravity_mode : bool, default False
-            gravity : float, default 1.0
+        edges_buffer_name : str
+            The name of the shared memory buffer where the edges are stored
+        positions_buffer_name : str
+            The name of the shared memory buffer where the positions are
+            stored.
+        info_buffer_name : str
+        weights_buffer_name : str, optional
+        snapshots_buffer_name : str, optional
+        num_snapshots : int, optional
+        lin_log_mode : bool, default False
+        edge_weight_influence : float, default 1.0
+        jitter_tolerance : float, default 1.0
+        barnes_hut_optimize : bool, default True
+        barnes_hut_theta : float, default 1.0
+        scaling_ratio : float, default 2.0
+        strong_gravity_mode : bool, default False
+        gravity : float, default 1.0
 
         """
         super().__init__(
@@ -137,21 +140,20 @@ class ForceAtlas2(NetworkLayoutIPCRender):
         of a different process which comunicates
         with this object through the SharedMemory from python>=3.8.
 
-
-        Parameters:
+        Parameters
         -----------
-            edges : ndarray
-            network_draw : NetworkDraw
-            weights: array, optional
-                edge weights
-            lin_log_mode : bool, default False
-            edge_weight_influence : float, default 1.0
-            jitter_tolerance : float, default 1.0
-            barnes_hut_optimize : bool, default True
-            barnes_hut_theta : float, default 1.0
-            scaling_ratio : float, default 2.0
-            strong_gravity_mode : bool, default False
-            gravity : float, default 1.0
+        edges : ndarray
+        network_draw : NetworkDraw
+        weights: array, optional
+            edge weights
+        lin_log_mode : bool, default False
+        edge_weight_influence : float, default 1.0
+        jitter_tolerance : float, default 1.0
+        barnes_hut_optimize : bool, default True
+        barnes_hut_theta : float, default 1.0
+        scaling_ratio : float, default 2.0
+        strong_gravity_mode : bool, default False
+        gravity : float, default 1.0
 
         """
 
@@ -181,14 +183,14 @@ class ForceAtlas2(NetworkLayoutIPCRender):
             self, steps=100, iters_by_step=3,):
         """This will return the python code which starts the ForceAtlas2ServerCalc
 
-        Parameters:
-        -----------
-            steps : int, optional, default 100
-            iters_by_step : int, optional, default 3
+        Parameters
+        ----------
+        steps : int, optional, default 100
+        iters_by_step : int, optional, default 3
 
         Returns
         -------
-            s : str
+        s : str
 
         """
         s = 'from helios.layouts.forceatlas2gpu import ForceAtlas2ServerCalc;'
