@@ -132,6 +132,17 @@ class SharedMemArrayManager(GenericArrayBufferManager):
         elif self._repr.shape[0] == data.shape[0] and equal_dim:
             self._repr[:] = data.astype(self._dtype)
 
+    def update_snapshot(self, data, step):
+        size = data.shape[0]
+        start = step*size
+        end = step*size + size
+        self._repr[start:end] = data.astype(self._dtype)
+
+    def get_snapshot(self, step, size):
+        start = step*size
+        end = (step*size + size)
+        return self._repr[start:end]
+
 
 class ShmManagerMultiArrays:
     def __init__(self):
@@ -197,6 +208,14 @@ class ShmManagerMultiArrays:
             num_elements=num_elements)
         self._shm_attr_names.append(attr_name)
         setattr(self, attr_name, _shm)
+
+    def cleanup_mem(self, resource_name):
+        if resource_name in self._shm_attr_names:
+            getattr(self, resource_name).cleanup()
+            self._shm_attr_names.remove(resource_name)
+            delattr(self, resource_name)
+        else:
+            raise ValueError(f'{resource_name} is not in this ShmManager')
 
     def cleanup(self):
         for _shm_name in self._shm_attr_names:

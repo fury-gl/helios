@@ -72,6 +72,8 @@ class NetworkLayoutIPCServerCalc(ABC):
         info_buffer_name,
         weights_buffer_name=None,
         dimension=3,
+        snaphosts_buffer_name=None,
+        num_snapshots=0,
     ):
         """An abstract class which reads the network information
         from the shared memory resources. Usually, this should be used
@@ -86,6 +88,8 @@ class NetworkLayoutIPCServerCalc(ABC):
             info_buffer_name : str
             weights_buffer_name : str, optional
             dimension : int
+            snaphosts_buffer_name : str, optional
+            num_snapshots : int, optional
 
         """
         self._dimension = dimension
@@ -93,7 +97,7 @@ class NetworkLayoutIPCServerCalc(ABC):
         self._shm_manager = ShmManagerMultiArrays()
         self._shm_manager.load_array(
             'info', buffer_name=info_buffer_name, dimension=1,
-            dtype='float32',)
+            dtype='float32', num_elements=3)
         self._shm_manager.load_array(
             'positions', buffer_name=positions_buffer_name,
             dimension=self._dimension,
@@ -108,6 +112,14 @@ class NetworkLayoutIPCServerCalc(ABC):
                 'weights', buffer_name=weights_buffer_name,
                 dimension=1, dtype='float32', num_elements=num_edges)
 
+        self._record_positions = snaphosts_buffer_name is not None
+        if self._record_positions:
+            self._shm_manager.load_array(
+                'snapshots_positions', buffer_name=snaphosts_buffer_name,
+                dimension=self._dimension, dtype='float32',
+                num_elements=num_nodes*num_snapshots)
+            self._num_snapshots = num_snapshots
+
     @abstractmethod
     def start(self, steps=100, iters_by_step=3):
         """This method starts the network layout algorithm.
@@ -120,7 +132,7 @@ class NetworkLayoutIPCServerCalc(ABC):
         """
         ...
 
-    def _update(self, positions):
+    def _update(self, positions, step):
         """This method update the shared memory resource which stores the
         network positions. Usually, you should call this inside of the
         start method implementation
@@ -130,8 +142,13 @@ class NetworkLayoutIPCServerCalc(ABC):
             positions : ndarray
 
         """
+        # self._shm_manager.update_array(if self._record_positions:
+        if self._record_positions:
+            self._shm_manager.snapshots_positions.update_snapshot(
+                positions, step % self._num_snapshots)
         self._shm_manager.positions.data = positions
         self._shm_manager.info._repr[0] = time.time()
+        self._shm_manager.info._repr[2] = step
 
     def __del__(self):
         self._shm_manager.cleanup()
@@ -166,7 +183,7 @@ class NetworkLayoutIPCRender(ABC):
         )
         self._shm_manager.add_array(
             'info',
-            np.array([0, 0]),
+            np.array([0, 0, 0]),
             1,
             'float32'
         )
@@ -212,12 +229,19 @@ class NetworkLayoutIPCRender(ABC):
         and right after that refresh the network draw
 
         """
-        self._network_draw.positions = self._shm_manager.positions.data
+        if self._record_positions:
+            self._network_draw.positions = self._shm_manager.\
+                snapshots_positions.get_snapshot(
+                    self._current_step, self._num_nodes)
+            self._current_step += 1
+            self._current_step = self._current_step % self._steps
+        else:
+            self._network_draw.positions = self._shm_manager.positions.data
         self._network_draw.refresh()
 
     def start(
             self, ms=30, steps=100, iters_by_step=2,
-            without_iren_start=True):
+            record_positions=False, without_iren_start=True):
         """This method starts the network layout algorithm creating a
         new subprocess. Right after the network layout algorithm
         finish the computation (ending of the related subprocess),
@@ -234,6 +258,7 @@ class NetworkLayoutIPCRender(ABC):
                 be updated three times.
             iters_by_step : int
                 number of interations in each step
+            record_positions : bool, optional, default True
             without_iren_start : bool, optional, default True
                 Set this to False if you will start the ShowManager.
                 That is, if you will invoke the following commands
@@ -244,6 +269,23 @@ class NetworkLayoutIPCRender(ABC):
         """
         if self._started:
             return
+
+        self._record_positions = record_positions
+        if record_positions:
+            self._shm_manager.add_array(
+                'snapshots_positions',
+                np.zeros(
+                    (
+                        self._shm_manager.positions._num_elements*steps,
+                        self._dimension
+                    )
+                ),
+                self._dimension,
+                'float32'
+            )
+            self._steps = steps
+            self._current_step = 0
+
         self._last_update = time.time()
         args = [
             sys.executable, '-c',
@@ -252,7 +294,6 @@ class NetworkLayoutIPCRender(ABC):
         self._pserver = subprocess.Popen(
             args,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
-        ms = 12
         if ms > 0:
             def callback_update_pos(caller, event):
                 should_update = self._check_and_sync()
@@ -283,16 +324,24 @@ class NetworkLayoutIPCRender(ABC):
 
         """
         last_update = self._shm_manager.info._repr[0]
+        self._last_update = last_update
+
         # if stop has been called inside the treading timer
         # maybe another callback can be executed
+        ok = True
         if self._pserver is None:
-            return False
+            ok = False
+
+        elif self._record_positions:
+            ok = self._current_step < self._shm_manager.info._repr[2]
         # if the process finished then stop the callback
-        if not is_running(self._pserver, 0):
+        elif not is_running(self._pserver, 0):
             self.stop()
-            return False
-        self._last_update = last_update
-        return True
+            ok = False
+        else:
+            ok = True
+
+        return ok
 
     def stop(self):
         """Stop the layout algorithm
@@ -317,6 +366,8 @@ class NetworkLayoutIPCRender(ABC):
             self._pserver.kill()
             self._pserver.wait()
             self._pserver = None
+        if self._record_positions:
+            self._shm_manager.cleanup_mem('snapshots_positions')
 
         self._started = False
 
