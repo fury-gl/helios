@@ -18,6 +18,8 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
         positions_buffer_name,
         info_buffer_name,
         weights_buffer_name=None,
+        snapshots_buffer_name=None,
+        num_snapshots=0,
         lin_log_mode=False,
         edge_weight_influence=1.0,
         jitter_tolerance=1.0,
@@ -36,6 +38,8 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
             positions_buffer_name : str
             info_buffer_name : str
             weights_buffer_name : str, optional
+            snapshots_buffer_name : str, optional
+            num_snapshots : int, optional
             lin_log_mode : bool, default False
             edge_weight_influence : float, default 1.0
             jitter_tolerance : float, default 1.0
@@ -52,6 +56,8 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
             info_buffer_name,
             weights_buffer_name,
             2,
+            snapshots_buffer_name,
+            num_snapshots
         )
         self._vertex = np.arange(0, self._shm_manager.positions._repr.shape[0])
 
@@ -86,7 +92,9 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
         self.gravity = gravity
 
     def start(self, steps=100, iters_by_step=3):
-        for _ in range(steps):
+        # -1 means the computation has been intialized
+        self._shm_manager.info._repr[1] = -1
+        for step in range(steps):
             self._pos_cudf = cg.layout.force_atlas2(
                 self._G,
                 max_iter=iters_by_step,
@@ -104,7 +112,7 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
                 callback=None)
 
             self._update(
-                self._pos_cudf.to_pandas().to_numpy()[:, 0:2])
+                self._pos_cudf.to_pandas().to_numpy()[:, 0:2], step)
         # to inform that everthing worked
         self._shm_manager.info._repr[1] = 1
 
@@ -191,6 +199,10 @@ class ForceAtlas2(NetworkLayoutIPCRender):
         s += 'positions_buffer_name='
         s += f'"{self._shm_manager.positions._buffer_name}",'
         s += f'info_buffer_name="{self._shm_manager.info._buffer_name}",'
+        if self._record_positions:
+            s += 'snapshots_buffer_name='
+            s += f'"{self._shm_manager.snapshots_positions._buffer_name}",'
+            s += f'num_snapshots={steps},'
         s += 'lin_log_mode ='
         s += f'{self.lin_log_mode},'
         s += 'edge_weight_influence ='

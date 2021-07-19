@@ -35,8 +35,10 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
         edges_buffer_name,
         positions_buffer_name,
         info_buffer_name,
-        weights_buffer_name=None,
         dimension=3,
+        weights_buffer_name=None,
+        snapshots_buffer_name=None,
+        num_snapshots=0,
         penalty_name=None,
         penalty_parameters_buffer_name=None,
         num_penalty_parameters=None,
@@ -58,6 +60,8 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
             positions_buffer_name : str
             info_buffer_name : str
             weights_buffer_name : str, optional
+            snapshots_buffer_name : str, optional
+            num_snapshots : int, optional
             dimension=3 : int, optional
                 layout dimension
             penalty_name : str, optional
@@ -79,6 +83,8 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
             info_buffer_name,
             weights_buffer_name,
             dimension,
+            snapshots_buffer_name,
+            num_snapshots
         )
         self._positions_torch = torch.tensor(
             self._shm_manager.positions.data)
@@ -144,7 +150,7 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
                         constraint_anchors_buffer_name,
                         self._dimension+1,
                         'float32',
-                        num_anchors 
+                        num_anchors
                     )
                     torch_anchors = torch.tensor(
                         self._shm_manager.anchors._repr[
@@ -183,12 +189,14 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
             iters_by_step: int
 
         """
-        for _ in range(steps):
+        # -1 means the computation has been intialized
+        self._shm_manager.info._repr[1] = -1
+        for step in range(steps):
             self._positions_torch = self.mde.embed(
                     self._positions_torch,
                     max_iter=iters_by_step)
 
-            self._update(self._positions_torch.cpu().numpy())
+            self._update(self._positions_torch.cpu().numpy(), step)
         # to inform that everthing worked
         self._shm_manager.info._repr[1] = 1
 
@@ -253,6 +261,7 @@ class MDE(NetworkLayoutIPCRender):
                 raise ValueError(
                     '"anchors" and "anchors_pos" are mandatory ' +
                     'when using anchored constraint')
+
             self._shm_manager.add_array(
                 'anchors',
                 data=np.c_[anchors_pos, anchors],
@@ -273,6 +282,7 @@ class MDE(NetworkLayoutIPCRender):
         self._attractive_penalty_name = attractive_penalty_name
         self._repulsive_penalty_name = repulsive_penalty_name
         self._use_shortest_path = use_shortest_path
+
         if isinstance(penalty_parameters, list):
             self._penalty_parameters = penalty_parameters
             self._shm_manager.add_array(
@@ -283,8 +293,6 @@ class MDE(NetworkLayoutIPCRender):
             )
         else:
             self._penalty_parameters = None
-
-        self.update()
 
     def _command_string(
             self, steps=100, iters_by_step=3,):
@@ -316,6 +324,10 @@ class MDE(NetworkLayoutIPCRender):
             s += 'weights_buffer_name='
             s += f'"{self._shm_manager.weights._buffer_name}",'
 
+        if self._record_positions:
+            s += 'snapshots_buffer_name='
+            s += f'"{self._shm_manager.snapshots_positions._buffer_name}",'
+            s += f'num_snapshots={steps},'
         s += f'use_shortest_path={self._use_shortest_path},'
         if self._constraint_name is not None:
             s += f'constraint_name="{self._constraint_name}",'

@@ -56,7 +56,9 @@ mde = MDE(
     use_shortest_path=True
 )
 
-mde.start(3, 300, 1, False)
+mde.start(
+    3, 300, 1, 
+    record_positions=True, without_iren_start=False)
 interactive = True
 
 if interactive:
