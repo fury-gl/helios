@@ -4,7 +4,7 @@
 .. .. toctree::
 ..    :maxdepth: 10
 
-.. Helios basic representation
+. Helios basic representation
 .. --------------------
 
 .. .. automodule:: helios.core
@@ -13,13 +13,13 @@
 .. layout
 .. ------
 
-.. .. automodule:: helios.layout
+.. .. automodule:: helios.layouts
 ..    :members:
 
 .. visualization
 .. ------
 
-.. .. automodule:: helios.visualization
+.. .. automodule:: helios.backends
 ..    :members:
 
 
