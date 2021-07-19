@@ -25,6 +25,43 @@ class NetworkDraw(NetworkSuperActor):
         **kwargs
 
     ):
+        """This object is responsible to deal with the drawing of the network.
+
+        Parameters:
+        -----------
+
+        positions : ndarray
+            Array of the nodes positions.
+        edges : ndarray, optional
+            Array of the edges.
+        colors : tuple or ndarray, optional
+            Tuple of the colors of the nodes.
+        scales : float or ndarray, optional
+            Scaling factor for the node.
+        marker : str or list, optional
+            Marker for the nodes.
+        node_edge_width : float or array, optional
+            Width of the edges around the nodes.
+        node_opacity : float or array, optional
+            Opacity of the nodes.
+        node_edge_opacity : float or array, optional
+            Opacity of the edges.
+        node_edge_color : tuple or ndarray, optional
+            Color of the edges around the nodes.
+        edge_line_color : tuple or ndarray, optional
+            Color of the edges.
+        edge_line_opacity : float or ndarray, optional
+            Opacity of the edges.
+        edge_line_width : float or ndarray, optional
+            Width of the edges.
+        better_performance : bool, optional
+        write_frag_depth : bool, optional
+        window_size : tuple, optional
+            Size of the window.
+        showm : showm, optional
+            Fury ShowManager instance.
+
+        """
         if better_performance:
             write_frag_depth = False
 
@@ -64,7 +101,14 @@ class NetworkDraw(NetworkSuperActor):
         self.iren = showm.iren
         self.window = showm.window
         self.Render = self.showm.window.Render
+        self.start = self.showm.start
+        self.initialize = self.showm.initialize
 
     def refresh(self):
+        """This will refresh the FURY window instance.
+        Call this method every time that you change any property in the
+        network like positions, colors etc
+
+        """
         self.window.Render()
         self.iren.Render()

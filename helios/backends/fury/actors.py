@@ -737,12 +737,6 @@ class FurySuperEdge:
 
     @colors.setter
     def colors(self, new_colors):
-        """
-        Parameters
-        ----------
-
-        new_colors : ndarray N,3 uint8
-        """
         self._colors_geo[:] = new_colors
 
     def update(self):
