@@ -1,3 +1,5 @@
+"""Force-Directed Layout oct-tree
+"""
 import numpy as np
 import heliosFR
 
@@ -6,6 +8,19 @@ from helios.layouts.base import NetworkLayoutAsync
 
 
 class HeliosFr(NetworkLayoutAsync):
+    """A 2D/3D Force-directed layout method
+
+    This method is a wrapper for the helios force-directed algorithm, heliosFR.
+    HeliosFr is a force-directed layout algorithm that is based on oct-trees.
+    The algorithm is designed to work with a large number of nodes and edges.
+
+    References
+    ----------
+
+    [1] Fruchterman, T. M. J., & Reingold, E. M. (1991). Graph Drawing
+    by Force-Directed Placement. Software: Practice and Experience, 21(11).
+
+    """
     def __init__(
         self,
         edges,
@@ -14,8 +29,7 @@ class HeliosFr(NetworkLayoutAsync):
         max_workers=8, update_interval_workers=0,
         velocities=None
     ):
-        """Force-directed layout method. Can be used for both 2d and
-        3d layouts.
+        """
 
         Parameters
         ----------
@@ -89,6 +103,13 @@ class HeliosFr(NetworkLayoutAsync):
         self._layout.stop()
         self._started = False
 
-    def steps(self, iterations=1):
+    def steps(self, iterations):
+        """A Sync version of the helios force-directed algorithm.
+
+        Parameters
+        ----------
+        iterations : int
+
+        """
         self._layout.iterate(iterations=iterations)
         self.update()

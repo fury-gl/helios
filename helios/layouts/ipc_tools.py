@@ -1,4 +1,9 @@
-"""Module that provides some objects to deal with inter-process communication
+"""
+Inter-Process communication tools
+==================================
+
+This Module provides some objects to deal with inter-process communication
+
 """
 
 import numpy as np
@@ -14,12 +19,16 @@ else:
 
 
 class GenericArrayBufferManager(ABC):
+    """This implements a abstract (generic) ArrayBufferManager.
+
+    The GenericArrayBufferManager is used for example to share the
+    positions, edges and weights between different process.
+
+    """
     def __init__(
             self, dimension, dtype='float64', num_elements=None):
-        """This implements a abstract (generic) ArrayBufferManager.
-        The GenericArrayBufferManager is used for example to share the
-        positions, edges and weights between different process.
-
+        """
+        
         Parameters
         ----------
         dimension : int
@@ -47,10 +56,13 @@ class GenericArrayBufferManager(ABC):
 
 
 class SharedMemArrayManager(GenericArrayBufferManager):
+    """An implementation of a GenericArrayBufferManager using SharedMemory
+
+    """
     def __init__(
             self,  dimension, dtype, data=None, buffer_name=None,
             num_elements=None):
-        """An implementation of a GenericArrayBufferManager using SharedMemory
+        """
 
         Parameters
         ----------
@@ -147,16 +159,17 @@ class SharedMemArrayManager(GenericArrayBufferManager):
 
 
 class ShmManagerMultiArrays:
-    def __init__(self):
-        """This Obj. allows to deal with multiple arrays
+    """This Obj. allows to deal with multiple arrays
         stored using SharedMemory
-
-        """
+    """
+    def __init__(self):
         self._shm_attr_names = []
 
     def add_array(self, attr_name, data, dimension, dtype):
         """This creates a shared memory resource
-        to store the data. The shared memory obj will be accessible
+        to store the data.
+
+        The shared memory obj will be accessible
         through
 
         >>> self.attr_name

@@ -1,9 +1,13 @@
+"""FURY NetworkDraw"""
 from fury import window
 
 from helios.backends.fury.actors import NetworkSuperActor
 
 
 class NetworkDraw(NetworkSuperActor):
+    """This object is responsible to deal with the drawing of the network.
+
+    """
     def __init__(
         self,
         positions,
@@ -25,7 +29,7 @@ class NetworkDraw(NetworkSuperActor):
         **kwargs
 
     ):
-        """This object is responsible to deal with the drawing of the network.
+        """
 
         Parameters
         ----------
@@ -107,9 +111,11 @@ class NetworkDraw(NetworkSuperActor):
 
     def refresh(self):
         """This will refresh the FURY window instance.
+
         Call this method every time that you change any property in the
         network like positions, colors etc
 
         """
-        self.window.Render()
-        self.iren.Render()
+        ...
+        # self.window.Render()
+        # self.iren.Render()

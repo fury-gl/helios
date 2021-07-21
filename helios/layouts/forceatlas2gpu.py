@@ -1,3 +1,10 @@
+"""
+ForceAtlas2 cuGraph
+===================
+
+ForceAtlas2 layout algorithm through IPC using cuGraph.
+
+"""
 import numpy as np
 
 try:
@@ -12,6 +19,10 @@ from helios.layouts.base import NetworkLayoutIPCServerCalc
 
 
 class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
+    """This Obj. reads the network information stored in a shared memory
+        resource and execute the ForceAtlas2 layout algorithm
+
+    """
     def __init__(
         self,
         edges_buffer_name,
@@ -29,8 +40,7 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
         strong_gravity_mode=False,
         gravity=1.0,
     ):
-        """This Obj. reads the network information stored in a shared memory
-        resource and execute the ForceAtlas2 layout algorithm
+        """
 
         Parameters
         -----------
@@ -121,6 +131,16 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
 
 
 class ForceAtlas2(NetworkLayoutIPCRender):
+    """Performs the ForceAtlas2 algorithm using the cugraph lib.
+
+    The ForceAtlas will be called inside of a different process which
+    comunicates with this object through the SharedMemory
+
+    Notes
+    -----
+    Python 3.8+ is required to use this
+
+    """
     def __init__(
         self,
         edges,
@@ -135,10 +155,7 @@ class ForceAtlas2(NetworkLayoutIPCRender):
         strong_gravity_mode=False,
         gravity=1.0,
     ):
-        """A object which performs the ForceAtlas2 algorithm
-        using the cugraph lib. The ForceAtlas will be called inside
-        of a different process which comunicates
-        with this object through the SharedMemory from python>=3.8.
+        """
 
         Parameters
         -----------

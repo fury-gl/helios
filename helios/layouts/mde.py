@@ -1,3 +1,9 @@
+"""
+Minimum-Distortion Embedding
+============================
+
+
+"""
 import numpy as np
 import torch
 import pymde
@@ -204,6 +210,20 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
 
 
 class MDE(NetworkLayoutIPCRender):
+    """Minimum Distortion Embedding algorithm running on IPC 
+  
+    This call  the PyMDE lib running in a different process which comunicates
+    with this object through SharedMemory from python>=3.8.
+
+    References
+    ----------
+    [1] PyMDE
+
+    Notes
+    -----
+    Python 3.8+ is required to use this
+
+    """
     def __init__(
         self,
         edges,
@@ -218,9 +238,7 @@ class MDE(NetworkLayoutIPCRender):
         attractive_penalty_name='log1p',
         repulsive_penalty_name='log',
     ):
-        """A object which performs Minimum Distortion Embedding algorithms
-        using the PyMDE lib running in a different process which comunicates
-        with this object through SharedMemory from python>=3.8
+        """
 
         Parameters
         -----------

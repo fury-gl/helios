@@ -1,3 +1,12 @@
+"""
+Network Layout Abstract Classes
+===============================
+
+This module provides a set of abstract classes to deal with
+different network layouts algorithms using different communication
+strategies.
+"""
+
 from abc import ABC, ABCMeta, abstractmethod
 import time
 import sys
@@ -41,7 +50,7 @@ class NetworkLayoutAsync(NetworkLayout, metaclass=ABCMeta):
 
 
 def is_running(p, timeout=0):
-    '''Check if the process "p" is running
+    '''Check if the process *p* is running
 
     Parameters
     ----------
@@ -49,7 +58,7 @@ def is_running(p, timeout=0):
     timeout : float, optional
         positive float
 
-    Returns:
+    Returns
     --------
     running : bool
 
@@ -64,6 +73,14 @@ def is_running(p, timeout=0):
 
 
 class NetworkLayoutIPCServerCalc(ABC):
+    """An abstract class which reads the network information
+    from the shared memory resources.
+
+    This should be used
+    inside of a subprocess which will update the network layout positions
+
+    """
+
     def __init__(
         self,
         num_nodes,
@@ -76,9 +93,7 @@ class NetworkLayoutIPCServerCalc(ABC):
         snaphosts_buffer_name=None,
         num_snapshots=0,
     ):
-        """An abstract class which reads the network information
-        from the shared memory resources. Usually, this should be used
-        inside of a subprocess which will update the network layout positions
+        """
 
         Parameters
         ----------
@@ -159,9 +174,12 @@ class NetworkLayoutIPCServerCalc(ABC):
 
 
 class NetworkLayoutIPCRender(ABC):
-    def __init__(self, network_draw, edges, weights=None):
-        """An abstract class which reads the network information
+    """An abstract class which reads the network information
         and creates the shared memory resources.
+
+    """
+    def __init__(self, network_draw, edges, weights=None):
+        """
 
         Parameters
         ----------
@@ -211,7 +229,7 @@ class NetworkLayoutIPCRender(ABC):
 
     @abstractmethod
     def _command_string(self, steps, iters_by_step):
-        """Should return the python code which will compute
+        """Return the python code which will compute
         the layout positions.
 
         Parameters
@@ -248,8 +266,10 @@ class NetworkLayoutIPCRender(ABC):
     def start(
             self, ms=30, steps=100, iters_by_step=2,
             record_positions=False, without_iren_start=True):
-        """This method starts the network layout algorithm creating a
-        new subprocess. Right after the network layout algorithm
+        """This method starts the network layout algorithm
+        creating a new subprocess.
+
+        Right after the network layout algorithm
         finish the computation (ending of the related subprocess),
         the stop method will be called automatically.
 
@@ -322,7 +342,9 @@ class NetworkLayoutIPCRender(ABC):
         self._started = True
 
     def _check_and_sync(self):
-        """ This will check  two conditions:
+        """
+
+        This will check  two conditions:
         1 - If the positions in the shared memory resources have
         changed.
         2 - If the process responsible to compute the layout positions

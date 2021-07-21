@@ -1,0 +1,20 @@
+@import 'theme.css';
+wy-menu-vertical header, .wy-menu-vertical p.caption {
+    color: #f3b95d;
+    height: 32px;
+}
+
+a:hover {
+    color: #b95b34;
+}
+a:active, a:hover {
+    outline: 0;
+}
+a {
+    color: #5f3d1e;
+    text-decoration: none;
+    cursor: pointer;
+}
+.wy-side-nav-search {
+    background-color: #f7924a;
+}

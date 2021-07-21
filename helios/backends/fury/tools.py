@@ -1,8 +1,15 @@
+"""VTK/FURY tools """
+
+
 class Uniform:
+    """This creates a uniform shader variable
+
+    It's responsible to store the value of a given uniform
+    variable and call the related vtk_program
+
+    """
     def __init__(self, name, uniform_type, value):
-        """This is used for Uniforms. It's responsible to
-        store the value of a given uniform variable and call
-        the related vtk_program
+        """
 
         Parameters
         ----------
@@ -56,9 +63,7 @@ class Uniform:
 
 class Uniforms:
     def __init__(self, uniforms):
-        """This  creates an object which can store and
-        execute all the changes in uniforms variables associated
-        with a shader.
+        """Creates an object which store and execute an uniform variable.
 
         Parameters
         -----------
@@ -88,10 +93,9 @@ class Uniforms:
             setattr(self, obj.name, obj)
 
     def __call__(self, _caller, _event, calldata=None,):
-        """
-        This method should be used as a callback for a vtk Observer
-        which will execute the shader program with the given uniforms
-        variables.
+        """This method should be used as a callback for a vtk Observer
+
+        Execute the shader program with the given uniform variables.
 
         """
         program = calldata
