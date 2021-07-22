@@ -241,7 +241,7 @@ switch interactive variable to True if you want to visualize it.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  14.101 seconds)
+   **Total running time of the script:** ( 0 minutes  14.288 seconds)
 
 
 .. _sphx_glr_download_examples_gallery_viz_helios.py:

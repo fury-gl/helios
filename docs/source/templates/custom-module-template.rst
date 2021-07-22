@@ -43,10 +43,16 @@
       :nosignatures:
    {% for item in classes %}
    .. autoclass:: {{ item }}
+      {% if item=='MDE' or item=='HeliosFr' or item=='ForceAtlas2' %} 
+         .. _sphx_glr_backref_helios.layouts.{{item}}:
+         .. minigallery:: helios.layouts.{{item}}
+            :add-heading:
+      {% else %}
+         .. _sphx_glr_backref_{{fullname}}.{{item}}:
+         .. minigallery:: {{fullname}}.{{item}}
+            :add-heading:
+      {% endif %}
    
-   .. _sphx_glr_backref_{{fullname}}.{{item}}:
-   .. minigallery:: {{fullname}}.{{item}}
-      :add-heading:
 
    {%- endfor %}
    {% endif %}

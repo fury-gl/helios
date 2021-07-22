@@ -28,7 +28,6 @@ if errorlevel 9009 (
 
 if "%1" == "clean" (
 	:clean
-	%SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% clean
 	exit /B
 )
 

@@ -117,7 +117,7 @@ Minmum Distortion Embedding with Anchored Constraints
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  30.170 seconds)
+   **Total running time of the script:** ( 0 minutes  30.180 seconds)
 
 
 .. _sphx_glr_download_examples_gallery_viz_mde.py:
