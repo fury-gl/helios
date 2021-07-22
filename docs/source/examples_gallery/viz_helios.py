@@ -84,15 +84,16 @@ network_draw = NetworkDraw(
         edge_line_color=edgesColors,
         marker='3d',
         edges=edges,
+        window_size=(600, 600)
 )
-layout = HeliosFr(edges, network_draw, update_interval_workers=10)
+layout = HeliosFr(edges, network_draw, update_interval_workers=0)
 
 layout.start()
 ###############################################################################
 # The final step ! Visualize and save the result of our creation! Please,
 # switch interactive variable to True if you want to visualize it.
 
-interactive = False 
+interactive = True 
 if not interactive:
     import time
     time.sleep(10)

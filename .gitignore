@@ -1,6 +1,6 @@
-docs/source/_autosummary
-#docs/source/auto_examples
-# docs/source/api
+# docs/source/_autosummary
+# docs/source/api_gallery
+# docs/source/examples_gallery
 # to uninstall when using pip install e. or python setup.py develop
 files.txt
 # Prerequisites

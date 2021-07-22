@@ -42,30 +42,31 @@ extensions = [
     'ablog',
 ]
 
-if 'IN_READTHEDOCS' not in os.environ.keys():
-    extensions.append('sphinx_gallery.gen_gallery')
-    # -- Options for sphinx gallery -------------------------------------------
+# if 'IN_READTHEDOCS' not in os.environ.keys():
+extensions.append('sphinx_gallery.gen_gallery')
+# -- Options for sphinx gallery -------------------------------------------
 
-    from scrap import ImageFileScraper
-    sc = ImageFileScraper()
+from scrap import ImageFileScraper
+sc = ImageFileScraper()
 
-    sphinx_gallery_conf = {
-        'doc_module': ('helios','helios.layouts', 'helios.backends'),
-        # path to your examples scripts
-        'examples_dirs': ['../examples'],
-        # path where to save gallery generated examples
-        'gallery_dirs': ['examples_gallery'],
-        'image_scrapers': (sc),
-        'backreferences_dir': 'api_gallery',
-        'reference_url': {'helios': None, },
-        'filename_pattern': re.escape(os.sep)
-    }
+sphinx_gallery_conf = {
+    'doc_module': ('helios', 'helios.layouts', 'helios.backends'),
+    # path to your examples scripts
+    'examples_dirs': ['../examples'],
+    # path where to save gallery generated examples
+    'gallery_dirs': ['examples_gallery'],
+    'image_scrapers': (sc),
+    'backreferences_dir': 'api_gallery',
+    'reference_url': {'helios': None, },
+    'filename_pattern': re.escape(os.sep)
+}
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
 }
 
-autosummary_generate = True  # Turn on sphinx.ext.autosummary
+autosummary_generate = 'IN_READTHEDOCS' not in os.environ.keys()  # Turn on sphinx.ext.autosummary
+autosummary_generate =  False  # Turn on sphinx.ext.autosummary
 autoclass_content = "both"  # Add __init__ doc (ie. params) to class summaries
 #html_show_sourcelink = False  # Remove 'view source code' from top of page (for html, not python)
 autodoc_inherit_docstrings = True  # If no docstring, inherit from base class

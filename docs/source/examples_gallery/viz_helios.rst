@@ -180,7 +180,7 @@ Our data preparation is ready, it is time to visualize them all. We start to
 build 2 actors that we represent our data : sphere_actor for the nodes and
 lines_actor for the edges.
 
-.. GENERATED FROM PYTHON SOURCE LINES 77-91
+.. GENERATED FROM PYTHON SOURCE LINES 77-92
 
 .. code-block:: default
 
@@ -194,8 +194,9 @@ lines_actor for the edges.
             edge_line_color=edgesColors,
             marker='3d',
             edges=edges,
+            window_size=(600, 600)
     )
-    layout = HeliosFr(edges, network_draw, update_interval_workers=10)
+    layout = HeliosFr(edges, network_draw, update_interval_workers=0)
 
     layout.start()
 
@@ -205,17 +206,17 @@ lines_actor for the edges.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 92-94
+.. GENERATED FROM PYTHON SOURCE LINES 93-95
 
 The final step ! Visualize and save the result of our creation! Please,
 switch interactive variable to True if you want to visualize it.
 
-.. GENERATED FROM PYTHON SOURCE LINES 94-107
+.. GENERATED FROM PYTHON SOURCE LINES 95-108
 
 .. code-block:: default
 
 
-    interactive = False 
+    interactive = True 
     if not interactive:
         import time
         time.sleep(10)
@@ -241,7 +242,7 @@ switch interactive variable to True if you want to visualize it.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  14.288 seconds)
+   **Total running time of the script:** ( 0 minutes  28.407 seconds)
 
 
 .. _sphx_glr_download_examples_gallery_viz_helios.py:

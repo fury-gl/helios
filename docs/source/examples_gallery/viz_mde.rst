@@ -22,7 +22,7 @@
 Minmum Distortion Embedding with Anchored Constraints
 =====================================================
 
-.. GENERATED FROM PYTHON SOURCE LINES 7-84
+.. GENERATED FROM PYTHON SOURCE LINES 7-85
 
 
 
@@ -83,7 +83,7 @@ Minmum Distortion Embedding with Anchored Constraints
             edge_line_opacity=.5,
             edge_line_color=(0, 0, 0),
             marker='3d',
-            window_size=(500, 500),
+            window_size=(700, 700),
             edges=np.array(edges)
     )
 
@@ -96,12 +96,13 @@ Minmum Distortion Embedding with Anchored Constraints
     )
 
 
-    interactive = False
+    interactive = True
     if not interactive:
         mde.start(
-            100, 1, 300, 
+            1, 1, 300, 
             record_positions=False, without_iren_start=True)
         time.sleep(30)
+        network_draw.refresh()
         mde.stop()
     else:
         mde.start(
@@ -117,7 +118,7 @@ Minmum Distortion Embedding with Anchored Constraints
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  30.180 seconds)
+   **Total running time of the script:** ( 0 minutes  9.679 seconds)
 
 
 .. _sphx_glr_download_examples_gallery_viz_mde.py:

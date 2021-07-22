@@ -1,20 +1,25 @@
 @import 'theme.css';
 wy-menu-vertical header, .wy-menu-vertical p.caption {
-    color: #f3b95d;
+    color: #eca260;
     height: 32px;
 }
 
 a:hover {
-    color: #b95b34;
+    color: #eca260;
 }
 a:active, a:hover {
     outline: 0;
 }
 a {
-    color: #5f3d1e;
+    color: #f8821a;
     text-decoration: none;
     cursor: pointer;
 }
 .wy-side-nav-search {
-    background-color: #f7924a;
+    background-color: #eca260;
+}
+.wy-menu-vertical a:active {
+    background-color: #f8821a;
+    cursor: pointer;
+    color: #fff;
 }

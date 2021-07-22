@@ -51,7 +51,7 @@ network_draw = NetworkDraw(
         edge_line_opacity=.5,
         edge_line_color=(0, 0, 0),
         marker='3d',
-        window_size=(500, 500),
+        window_size=(700, 700),
         edges=np.array(edges)
 )
 
@@ -64,12 +64,13 @@ mde = MDE(
 )
 
 
-interactive = False
+interactive = True
 if not interactive:
     mde.start(
-        100, 1, 300, 
+        1, 1, 300, 
         record_positions=False, without_iren_start=True)
     time.sleep(30)
+    network_draw.refresh()
     mde.stop()
 else:
     mde.start(
