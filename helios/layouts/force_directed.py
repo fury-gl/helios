@@ -1,5 +1,5 @@
-"""Force-Directed Layout oct-tree
-"""
+"""Force-Directed Layout oct-tree"""
+
 import numpy as np
 import heliosFR
 

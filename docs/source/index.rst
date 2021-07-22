@@ -2,15 +2,16 @@
 Helios Network Visualization
 ============================
 
-.. image:: imgs/helios.png
+.. image:: imgs/logo.png
     :align: center
 
+.. currentmodule:: helios
 
 .. toctree::
    :maxdepth: 2
    :caption: About Helios 
    :hidden:
-
+   
    introduction
    License <symlink/license.rst>
    blog
@@ -22,15 +23,17 @@ Helios Network Visualization
 
    installation
    getting_started
-   auto_examples/index
+   examples_gallery/index
+
 
 .. toctree::
    :maxdepth: 2
    :caption: Developers Guide
    :hidden:
 
-   reference/index
+   api
    symlink/contributing.rst
+
 
 .. toctree::
    :maxdepth: 1

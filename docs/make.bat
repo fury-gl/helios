@@ -28,17 +28,17 @@ if errorlevel 9009 (
 
 if "%1" == "clean" (
 	:clean
-	del /q /s %SOURCEDIR%\\api  %SOURCEDIR%\\reference
-	rmdir %SOURCEDIR%\\api  %SOURCEDIR%\\reference
 	%SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% clean
 	exit /B
 )
 
 
 if "%1" == "html-examples" (
-	del /q /s  %SOURCEDIR%\\auto_examples %SOURCEDIR%\\auto_tutorials 
-	rmdir %SOURCEDIR%\\auto_examples %SOURCEDIR%\\auto_tutorials 
-	%SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
+	del /q /s %SOURCEDIR%\\api_gallery  
+	rmdir %SOURCEDIR%\\api_gallery
+	del /q /s  %SOURCEDIR%\\examples_gallery %SOURCEDIR%\\auto_tutorials 
+	rmdir %SOURCEDIR%\\examples_gallery %SOURCEDIR%\\auto_tutorials 
+	%SPHINXBUILD% -D plot_gallery=1 -b html %SPHINXOPTS% "%SOURCEDIR%" "%BUILDDIR%/html"
 	echo "Build finished. The HTML pages are in %BUILDDIR%"
 	exit /B
 )

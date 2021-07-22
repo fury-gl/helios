@@ -1,3 +1,4 @@
+docs/source/_autosummary
 #docs/source/auto_examples
 # docs/source/api
 # to uninstall when using pip install e. or python setup.py develop

@@ -4,5 +4,6 @@ sphinx_rtd_theme
 numpy>=1.8
 pymde
 heliosFR
+ablog >= 0.10.5
 sphinx-copybutton
 git+https://github.com/devmessias/fury.git@a94e22dbc28#egg=fury

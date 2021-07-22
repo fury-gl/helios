@@ -15,14 +15,14 @@ help:
 .PHONY: help Makefile
 
 clean:
-	rm -rf "$(SOURCEDIR)/api"
-	rm -rf "$(SOURCEDIR)/reference"
-	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) clean
+	rm -rf "$(SOURCEDIR)/_autosummary"
+
 
 html-examples:
-	rm -rf "$(SOURCEDIR)/auto_examples"
-	rm -rf "$(SOURCEDIR)/auto_tutorials"
-	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	rm -rf "$(SOURCEDIR)/examples_gallery"
+	rm -rf "$(SOURCEDIR)/api_gallery"
+	@echo $@
+	$(SPHINXBUILD) -D plot_gallery=1 -b html $(SPHINXOPTS) "$(SOURCEDIR)" "$(BUILDDIR)/html"
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 

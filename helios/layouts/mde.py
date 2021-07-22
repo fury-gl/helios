@@ -1,9 +1,4 @@
-"""
-Minimum-Distortion Embedding
-============================
-
-
-"""
+"""Minimum-Distortion Embedding"""
 import numpy as np
 import torch
 import pymde

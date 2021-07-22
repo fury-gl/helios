@@ -10,8 +10,6 @@ import os
 import re
 import sys
 from datetime import datetime
-from typing import get_args
-import sphinx_rtd_theme
 import helios 
 
 # Add current path
@@ -25,7 +23,7 @@ sys.path.insert(0, os.path.abspath('./ext'))
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-needs_sphinx = '2.1'
+
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -37,14 +35,77 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
-    'IPython.sphinxext.ipython_directive',
-    'IPython.sphinxext.ipython_console_highlighting',
+    # 'IPython.sphinxext.ipython_directive',
+    # 'IPython.sphinxext.ipython_console_highlighting',
     'matplotlib.sphinxext.plot_directive',
     'sphinx_copybutton',
-    'sphinx_gallery.gen_gallery',
-    'ext.build_modref_templates',
     'ablog',
 ]
+
+if 'IN_READTHEDOCS' not in os.environ.keys():
+    extensions.append('sphinx_gallery.gen_gallery')
+    # -- Options for sphinx gallery -------------------------------------------
+
+    from scrap import ImageFileScraper
+    sc = ImageFileScraper()
+
+    sphinx_gallery_conf = {
+        'doc_module': ('helios','helios.layouts', 'helios.backends'),
+        # path to your examples scripts
+        'examples_dirs': ['../examples'],
+        # path where to save gallery generated examples
+        'gallery_dirs': ['examples_gallery'],
+        'image_scrapers': (sc),
+        'backreferences_dir': 'api_gallery',
+        'reference_url': {'helios': None, },
+        'filename_pattern': re.escape(os.sep)
+    }
+
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+}
+
+autosummary_generate = True  # Turn on sphinx.ext.autosummary
+autoclass_content = "both"  # Add __init__ doc (ie. params) to class summaries
+#html_show_sourcelink = False  # Remove 'view source code' from top of page (for html, not python)
+autodoc_inherit_docstrings = True  # If no docstring, inherit from base class
+#set_type_checking_flag = True  # Enable 'expensive' imports for sphinx_autodoc_typehints
+#autodoc_typehints = "description" # Sphinx-native method. Not as good as sphinx_autodoc_typehints
+
+# Add any paths that contain templates here, relative to this directory.
+templates_path = ['templates']
+
+
+# Exclusions
+# To exclude a module, use autodoc_mock_imports. Note this may increase build time, a lot.
+# (Also, when installing on readthedocs.org, we omit installing Tensorflow and
+# Tensorflow Probability so mock them here instead.)
+#autodoc_mock_imports = [
+    # 'tensorflow',
+    # 'tensorflow_probability',
+#]
+# To exclude a class, function, method or attribute, use autodoc-skip-member. (Note this can also
+# be used in reverse, ie. to re-include a particular member that has been excluded.)
+# 'Private' and 'special' members (_ and __) are excluded using the Jinja2 templates; from the main
+# doc by the absence of specific autoclass directives (ie. :private-members:), and from summary
+# tables by explicit 'if-not' statements. Re-inclusion is effective for the main doc though not for
+# the summary tables.
+# def autodoc_skip_member_callback(app, what, name, obj, skip, options):
+#     # This would exclude the Matern12 class and to_default_float function:
+#     exclusions = ('Matern12', 'to_default_float')
+#     # This would re-include __call__ methods in main doc, previously excluded by templates:
+#     inclusions = ('__call__')
+#     if name in exclusions:
+#         return True
+#     elif name in inclusions:
+#         return False
+#     else:
+#         return skip
+# def setup(app):
+#     # Entry point to autodoc-skip-member
+#     app.connect("autodoc-skip-member", autodoc_skip_member_callback)
+
+
 napoleon_numpy_docstring = True
 napoleon_include_init_with_doc = False
 napoleon_include_private_with_doc = False
@@ -63,7 +124,7 @@ plot_html_show_source_link = False
 plot_html_show_formats = False
 
 # Generate the API documentation when building
-autosummary_generate = []
+
 numpydoc_show_class_members = False
 
 # Add any paths that contain templates here, relative to this directory.
@@ -84,7 +145,7 @@ master_doc = 'index'
 project = 'Helios'
 copyright = '2021-{0}, Helios'.format(datetime.now().year)
 author = 'Helios'
-html_logo = "imgs/logo_100_transparent.png"
+html_logo = "imgs/logo_100.png"
 html_favicon = "imgs/logo_36.ico"
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -126,7 +187,7 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ['static']
 
 html_style = 'css/main.css'
 
@@ -201,22 +262,7 @@ man_pages = [
      [author], 1)
 ]
 
-# -- Options for sphinx gallery -------------------------------------------
-from scrap import ImageFileScraper
 
-sc = ImageFileScraper()
-
-sphinx_gallery_conf = {
-     'doc_module': ('helios',),
-     # path to your examples scripts
-     'examples_dirs': ['../examples'],
-     # path where to save gallery generated examples
-     'gallery_dirs': ['auto_examples'],
-     'image_scrapers': (sc),
-     'backreferences_dir': 'api',
-     'reference_url': {'helios': None, },
-     'filename_pattern': re.escape(os.sep)
-}
 
 # -- Options for Texinfo output -------------------------------------------
 
@@ -236,3 +282,5 @@ intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
     'matplotlib': ('https://matplotlib.org', None),
 }
+autodoc_mock_imports = [
+    'fury', 'numpy', 'abc', 'ABC', 'ABCMeta', 'abstractmethod']

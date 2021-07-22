@@ -117,5 +117,5 @@ class NetworkDraw(NetworkSuperActor):
 
         """
         ...
-        # self.window.Render()
-        # self.iren.Render()
+        self.window.Render()
+        self.iren.Render()
