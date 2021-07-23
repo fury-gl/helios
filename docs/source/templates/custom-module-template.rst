@@ -34,15 +34,9 @@
    {% endblock %}
 
    {% block classes %}
-   {% if classes %}
-   .. rubric:: {{ _('Classes') }}
-
-   .. autosummary::
-      :toctree:
-      :template: custom-class-template.rst
-      :nosignatures:
-   {% for item in classes %}
-   .. autoclass:: {{ item }}
+      {% if classes %}
+      {% for item in classes %}
+       {% block examples %}
       {% if item=='MDE' or item=='HeliosFr' or item=='ForceAtlas2' %} 
          .. _sphx_glr_backref_helios.layouts.{{item}}:
          .. minigallery:: helios.layouts.{{item}}
@@ -52,9 +46,26 @@
          .. minigallery:: {{fullname}}.{{item}}
             :add-heading:
       {% endif %}
-   
-
-   {%- endfor %}
+      {% endblock %}
+      .. autoclass:: {{ item }}
+         :members:
+         :show-inheritance:
+         :inherited-members:
+         :special-members: __call__, __add__, __mul__
+         {% block methods %}
+            {% if methods %}
+            .. rubric:: {{ _('Methods') }}
+            .. autosummary::
+               :nosignatures:
+            {% for item in methods %}
+               {%- if not item.startswith('_') %}
+               ~{{ name }}.{{ item }}
+               {%- endif -%}
+            {%- endfor %}
+            {% endif %}
+         {% endblock %} 
+     
+      {%- endfor %}
    {% endif %}
    {% endblock %}
 
