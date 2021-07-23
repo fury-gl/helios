@@ -1,22 +1,20 @@
 """
-======================
-ForceAtlas2: SBM Model
-======================
+=======================================
+Force-Directed: SBM Model and 3d Layout
+=======================================
 
 The goal of this example is to show how to use the Helios Network
-draw with the ForceAtlas2 from cugraph. To run this you should
-have python 3.8 or greater and cudf/cugraph installed.
+draw with the Helios Force-Directed. To run this you should
+have python 3.8 or greater.
 
 """
 import numpy as np
 import networkx as nx
-import time
 import argparse
 from fury.window import record
 
 from helios import NetworkDraw
-from helios.layouts import ForceAtlas2
-from helios.layouts.forceatlas2gpu import CUDF_AVAILABLE
+from helios.layouts import HeliosFr
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -53,7 +51,7 @@ colors = np.array(
 markers = [['o', 's', 'd'][i//s] for i in range(len(g))]
 edge_colors = np.array(edge_colors).astype('float64')
 
-centers = np.random.normal(size=(len(g), 2))
+centers = np.random.normal(size=(len(g), 3))
 
 network_draw = NetworkDraw(
         positions=centers,
@@ -66,25 +64,21 @@ network_draw = NetworkDraw(
         window_size=(600, 600)
 )
 
-if not CUDF_AVAILABLE:
-    print('To run this example we should install cugraph first')
-else:
-    forceatlas2 = ForceAtlas2(
-        edges, network_draw,
-    )
-    if not interactive:
-        forceatlas2.start(3, 1, 300, False)
-        time.sleep(10)
-        network_draw.refresh()
-        forceatlas2.stop()
-    else:
-        forceatlas2.start(
-            3, 300, 1,
-            record_positions=True, without_iren_start=False)
+
+layout = HeliosFr(
+    edges, network_draw, update_interval_workers=0, max_workers=2)
+
+###############################################################################
+# The final step ! Visualize and save the result of our creation! Please,
+# switch interactive variable to True if you want to visualize it.
+
+if not interactive:
+    layout.steps(100)
     record(
-        network_draw.showm.scene,
-        out_path='viz_forceatlas2gpu.png', size=(600, 600))
+        network_draw.showm.scene, out_path='viz_helios2d.png', size=(600, 600))
 
 if interactive:
+    layout.start()
     network_draw.showm.initialize()
     network_draw.showm.start()
+

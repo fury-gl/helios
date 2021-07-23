@@ -6,7 +6,6 @@ Minmum Distortion Embedding: Anchored Constraints
 """
 
 import numpy as np
-import time
 import argparse
 
 from fury.window import record
@@ -22,6 +21,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 interactive = args.interactive
+print(interactive)
 depth = 9
 n_items = 2**(depth + 1) - 1
 
@@ -73,12 +73,11 @@ mde = MDE(
 
 
 if not interactive:
-    mde.start(
-        1, 1, 300,
-        record_positions=False, without_iren_start=True)
-    time.sleep(30)
+    exec(mde._command_string(1, 300))
+    mde.update()
     network_draw.refresh()
-    mde.stop()
+    record(
+        network_draw.showm.scene, out_path='viz_mde.png', size=(600, 600))
 else:
     mde.start(
         3, 300, 1,
@@ -88,5 +87,3 @@ if interactive:
     network_draw.showm.initialize()
     network_draw.showm.start()
 
-record(
-    network_draw.showm.scene, out_path='viz_mde.png', size=(600, 600))

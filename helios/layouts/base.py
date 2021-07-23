@@ -195,7 +195,7 @@ class NetworkLayoutIPCRender(ABC):
         self._id_timer = None
         self._pserver = None
         self._network_draw = network_draw
-        self._record_positions = True
+        self._record_positions = False
         self._dimension = 2 if network_draw._is_2d else 3
         self._shm_manager = ShmManagerMultiArrays()
         self._shm_manager.add_array(

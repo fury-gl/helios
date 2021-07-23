@@ -13,11 +13,10 @@ indicates a citation between two of them.
 # First, let's import some useful functions
 
 from os.path import join as pjoin
-import time
 from fury import colormap as cmap
 from fury.window import record
 import numpy as np
-
+import argparse
 ###############################################################################
 # Then let's download some available datasets.
 
@@ -26,7 +25,13 @@ from fury.data.fetcher import fetch_viz_wiki_nw
 from helios import NetworkDraw
 from helios.layouts.force_directed import HeliosFr
 
-interactive = False
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    '--interactive', dest='interactive', default=True, action='store_false')
+args = parser.parse_args()
+
+interactive = args.interactive
+
 files, folder = fetch_viz_wiki_nw()
 categories_file, edges_file, positions_file = sorted(files.keys())
 
@@ -96,13 +101,12 @@ layout = HeliosFr(
 # switch interactive variable to True if you want to visualize it.
 
 if not interactive:
-    layout.steps(1000)
+    layout.steps(300)
+    record(
+        network_draw.showm.scene, out_path='viz_helios.png', size=(600, 600))
 
 if interactive:
     layout.start()
     network_draw.showm.initialize()
     network_draw.showm.start()
     layout.stop()
-
-    record(
-        network_draw.showm.scene, out_path='viz_helios.png', size=(600, 600))

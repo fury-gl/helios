@@ -22,7 +22,6 @@ parser.add_argument(
 args = parser.parse_args()
 
 interactive = args.interactive
-interactive = False
 size = 1000
 s = size
 sizes = [s, s, s]
@@ -75,11 +74,11 @@ layout = HeliosFr(
 
 if not interactive:
     layout.steps(100)
+    record(
+        network_draw.showm.scene, out_path='viz_helios2d.png', size=(600, 600))
 
 if interactive:
     layout.start()
     network_draw.showm.initialize()
     network_draw.showm.start()
 
-record(
-    network_draw.showm.scene, out_path='viz_helios2d.png', size=(600, 600))
