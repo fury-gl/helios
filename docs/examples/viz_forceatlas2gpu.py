@@ -1,19 +1,29 @@
 """
-=======================================================
-ForceAtlas2 using cugraph
-=======================================================
+======================
+ForceAtlas2: SBM Model
+======================
 
-The goal of this example is to show how to use the Helios Network 
-draw with the ForceAtlas2 from cugraph. To run this you should 
+The goal of this example is to show how to use the Helios Network
+draw with the ForceAtlas2 from cugraph. To run this you should
 have python 3.8 or greater and cudf/cugraph installed.
 
 """
 import numpy as np
 import networkx as nx
+import time
+import argparse
+from fury.window import record
 
 from helios import NetworkDraw
 from helios.layouts import ForceAtlas2
+from helios.layouts.forceatlas2gpu import CUDF_AVAILABLE
 
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    '--interactive', dest='interactive', default=True, action='store_false')
+args = parser.parse_args()
+
+interactive = args.interactive
 size = 1000
 s = size
 sizes = [s, s, s]
@@ -53,15 +63,30 @@ network_draw = NetworkDraw(
         node_edge_width=0,
         marker=markers,
         edge_line_color=edge_colors,
+        window_size=(600, 600)
 )
 
-forceatlas2 = ForceAtlas2(
-    edges, network_draw,
-)
+if not CUDF_AVAILABLE:
+    print('To run this example we should install cugraph first')
+else:
+    forceatlas2 = ForceAtlas2(
+        edges, network_draw,
+    )
+    if not interactive:
+        forceatlas2.start(3, 1, 300, False)
+        time.sleep(10)
+        network_draw.refresh()
+        forceatlas2.stop()
+    else:
+        forceatlas2.start(
+            3, 300, 1,
+            record_positions=True, without_iren_start=False)
 
-forceatlas2.start(3, 300, 1, False)
-interactive = True
 
 if interactive:
     network_draw.showm.initialize()
     network_draw.showm.start()
+
+record(
+    network_draw.showm.scene,
+    out_path='viz_forceatlas2gpu.png', size=(600, 600))

@@ -1,7 +1,7 @@
 """
-=======================================================
-Visualize Interdisciplinary map of the journals network
-=======================================================
+=============================================================
+Force-Directed: Interdisciplinary map of the journals network
+=============================================================
 
 The goal of this app is to show an overview of the journals network structure
 as a complex network. Each journal is shown as a node and their connections
@@ -13,6 +13,7 @@ indicates a citation between two of them.
 # First, let's import some useful functions
 
 from os.path import join as pjoin
+import time
 from fury import colormap as cmap
 from fury.window import record
 import numpy as np
@@ -25,6 +26,7 @@ from fury.data.fetcher import fetch_viz_wiki_nw
 from helios import NetworkDraw
 from helios.layouts.force_directed import HeliosFr
 
+interactive = False
 files, folder = fetch_viz_wiki_nw()
 categories_file, edges_file, positions_file = sorted(files.keys())
 
@@ -86,22 +88,21 @@ network_draw = NetworkDraw(
         edges=edges,
         window_size=(600, 600)
 )
-layout = HeliosFr(edges, network_draw, update_interval_workers=0)
+layout = HeliosFr(
+    edges, network_draw, max_workers=4, update_interval_workers=0)
 
-layout.start()
 ###############################################################################
 # The final step ! Visualize and save the result of our creation! Please,
 # switch interactive variable to True if you want to visualize it.
 
-interactive = True 
 if not interactive:
-    import time
-    time.sleep(10)
-    layout.stop()
+    layout.steps(1000)
 
 if interactive:
+    layout.start()
     network_draw.showm.initialize()
     network_draw.showm.start()
+    layout.stop()
 
-record(
-    network_draw.showm.scene, out_path='viz_helios.png', size=(600, 600))
+    record(
+        network_draw.showm.scene, out_path='viz_helios.png', size=(600, 600))

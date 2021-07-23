@@ -15,7 +15,7 @@ help:
 .PHONY: help Makefile
 
 clean:
-	rm -rf "$(SOURCEDIR)/_autosummary"
+	rm -rf "$(SOURCEDIR)/autosummary"
 
 
 html-examples:

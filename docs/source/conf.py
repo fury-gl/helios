@@ -47,16 +47,28 @@ extensions.append('sphinx_gallery.gen_gallery')
 # -- Options for sphinx gallery -------------------------------------------
 
 from scrap import ImageFileScraper
+
+
+class ArgvExamples:
+    def __repr__(self):
+        return 'ArgvExamples'
+
+    def __call__(self, sphinx_gallery_conf, script_vars):
+        return ['--interactive', ]
+
+
 sc = ImageFileScraper()
 
 sphinx_gallery_conf = {
-    'doc_module': ('helios', 'helios.layouts', 'helios.backends'),
+    'doc_module': ('helios', 'helios.layouts', 'helios.backends.fury'),
     # path to your examples scripts
     'examples_dirs': ['../examples'],
     # path where to save gallery generated examples
     'gallery_dirs': ['examples_gallery'],
+
     'image_scrapers': (sc),
     'backreferences_dir': 'api_gallery',
+    'reset_argv': ArgvExamples(),
     'reference_url': {'helios': None, },
     'filename_pattern': re.escape(os.sep)
 }
@@ -66,12 +78,11 @@ intersphinx_mapping = {
 }
 
 autosummary_generate = 'IN_READTHEDOCS' not in os.environ.keys()  # Turn on sphinx.ext.autosummary
-autosummary_generate =  False  # Turn on sphinx.ext.autosummary
 autoclass_content = "both"  # Add __init__ doc (ie. params) to class summaries
-#html_show_sourcelink = False  # Remove 'view source code' from top of page (for html, not python)
+html_show_sourcelink = False  # Remove 'view source code' from top of page (for html, not python)
 autodoc_inherit_docstrings = True  # If no docstring, inherit from base class
-#set_type_checking_flag = True  # Enable 'expensive' imports for sphinx_autodoc_typehints
-#autodoc_typehints = "description" # Sphinx-native method. Not as good as sphinx_autodoc_typehints
+set_type_checking_flag = True  # Enable 'expensive' imports for sphinx_autodoc_typehints
+autodoc_typehints = "description" # Sphinx-native method. Not as good as sphinx_autodoc_typehints
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['templates']
