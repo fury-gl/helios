@@ -78,6 +78,7 @@ intersphinx_mapping = {
 }
 
 autosummary_generate = 'IN_READTHEDOCS' not in os.environ.keys()  # Turn on sphinx.ext.autosummary
+# autosummary_generate = False  # Turn on sphinx.ext.autosummary
 autoclass_content = "both"  # Add __init__ doc (ie. params) to class summaries
 html_show_sourcelink = False  # Remove 'view source code' from top of page (for html, not python)
 autodoc_inherit_docstrings = True  # If no docstring, inherit from base class
