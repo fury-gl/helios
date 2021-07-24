@@ -1,3 +1,14 @@
+"""Helios Force-Directed Layout using octree
+
+References
+----------
+    [1] Fruchterman, T. M. J., & Reingold, E. M. (1991). Graph Drawing
+    by Force-Directed Placement. Software: Practice and Experience, 21(11).
+    [2] Y. Hu, “Efficient, High-Quality Force-Directed Graph Drawing,” The
+    Mathematica Journal, p. 35, 2006.
+
+"""
+
 import numpy as np
 import heliosFR
 
@@ -6,6 +17,19 @@ from helios.layouts.base import NetworkLayoutAsync
 
 
 class HeliosFr(NetworkLayoutAsync):
+    """A 2D/3D Force-directed layout method
+
+    This method is a wrapper for the helios force-directed algorithm, heliosFR.
+    HeliosFr is a force-directed layout algorithm that is based on oct-trees.
+    The algorithm is designed to work with a large number of nodes and edges.
+
+    References
+    ----------
+
+    [1] Fruchterman, T. M. J., & Reingold, E. M. (1991). Graph Drawing
+    by Force-Directed Placement. Software: Practice and Experience, 21(11).
+
+    """
     def __init__(
         self,
         edges,
@@ -14,22 +38,26 @@ class HeliosFr(NetworkLayoutAsync):
         max_workers=8, update_interval_workers=0,
         velocities=None
     ):
-        """Force-directed layout method. Can be used for both 2d and
-        3d layouts.
+        """
 
-        Parameters:
+        Parameters
         ----------
-            edges : ndarray
-            network_draw : NetworkDraw
-            viscosity : float, optional
-            a : float, optional
-            b : float, optional
-            max_workers : int, optional
-                number of threads
-            update_interval_workers : float, optional
-                When you set this to a value greater than zero the
-                helios-fr will wait to perform each step. This can be used
-                to reduce the CPU consumption
+        edges : ndarray
+        network_draw : NetworkDraw
+        viscosity : float, optional
+        a : float, optional
+        b : float, optional
+        max_workers : int, optional
+            number of threads
+        update_interval_workers : float, optional
+            When you set this to a value greater than zero the
+            helios-fr will wait to perform each step. This can be used
+            to reduce the CPU consumption
+
+        Attributes
+        ----------
+        network_draw : NetworkDraw
+            The NetworkDraw Instance
 
         """
 
@@ -54,11 +82,11 @@ class HeliosFr(NetworkLayoutAsync):
     def start(self, ms=15):
         """Starts the helios force-directed layout using others threads (async).
 
-        Parameters:
-        -----------
-            ms : float, optional
-                Interval in milleseconds to update the node
-                and edge positions in the network visualization.
+        Parameters
+        ----------
+        ms : float, optional
+            Interval in milleseconds to update the node
+            and edge positions in the network visualization.
 
         """
         if self._started:
@@ -89,6 +117,13 @@ class HeliosFr(NetworkLayoutAsync):
         self._layout.stop()
         self._started = False
 
-    def steps(self, iterations=1):
+    def steps(self, iterations):
+        """A Sync version of the helios force-directed algorithm.
+
+        Parameters
+        ----------
+        iterations : int
+
+        """
         self._layout.iterate(iterations=iterations)
         self.update()

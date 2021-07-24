@@ -1,7 +1,7 @@
 """
-=======================================================
-Visualize Interdisciplinary map of the journals network
-=======================================================
+=============================================================
+Force-Directed: Interdisciplinary map of the journals network
+=============================================================
 
 The goal of this app is to show an overview of the journals network structure
 as a complex network. Each journal is shown as a node and their connections
@@ -13,16 +13,24 @@ indicates a citation between two of them.
 # First, let's import some useful functions
 
 from os.path import join as pjoin
-from fury import window, colormap as cmap
+from fury import colormap as cmap
+from fury.window import record
 import numpy as np
-
+import argparse
 ###############################################################################
 # Then let's download some available datasets.
 
 from fury.data.fetcher import fetch_viz_wiki_nw
 
 from helios import NetworkDraw
-from helios.layouts import HeliosFr
+from helios.layouts.force_directed import HeliosFr
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    '--interactive', dest='interactive', default=True, action='store_false')
+args = parser.parse_args()
+
+interactive = args.interactive
 
 files, folder = fetch_viz_wiki_nw()
 categories_file, edges_file, positions_file = sorted(files.keys())
@@ -46,8 +54,6 @@ category2index = {category: i
 index2category = np.unique(categories)
 
 categoryColors = cmap.distinguishable_colormap(nb_colors=len(index2category))
-
-
 
 colors = np.array([categoryColors[category2index[category]]
                    for category in categories])
@@ -79,30 +85,28 @@ edgesColors = np.average(np.array(edgesColors), axis=1)
 
 network_draw = NetworkDraw(
         positions=positions,
-        colors = colors,
+        colors=colors,
         scales=4,
         node_edge_width=0,
         edge_line_color=edgesColors,
         marker='3d',
         edges=edges,
-        better_performance=False # use that for older GPUs
+        window_size=(600, 600)
 )
-layout = HeliosFr(edges,network_draw, update_interval_workers=10)
+layout = HeliosFr(
+    edges, network_draw, max_workers=4, update_interval_workers=0)
 
-layout.start()
 ###############################################################################
 # The final step ! Visualize and save the result of our creation! Please,
 # switch interactive variable to True if you want to visualize it.
 
-interactive = True
+if not interactive:
+    layout.steps(300)
+    record(
+        network_draw.showm.scene, out_path='viz_helios.png', size=(600, 600))
 
 if interactive:
+    layout.start()
     network_draw.showm.initialize()
-
     network_draw.showm.start()
-
-# window.record(scene, out_path='journal_networks.png', size=(600, 600))
-
-###############################################################################
-# This example can be improved by adding some interactivy with slider,
-# picking, etc. Play with it, improve it!
+    layout.stop()

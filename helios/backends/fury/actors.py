@@ -1,3 +1,11 @@
+"""VTK Super Actors
+
+This modules contains the VTK super actors to be used in the 
+network visualization.
+
+
+"""
+
 import numpy as np
 from fury.shaders import add_shader_callback, attribute_to_actor
 from fury.shaders import shader_to_actor, load
@@ -16,8 +24,8 @@ from fury import window
 from helios.backends.fury.tools import Uniform, Uniforms
 
 _MARKER2Id = {
-            'o': 0, 's': 1, 'd': 2, '^': 3, 'p': 4,
-            'h': 5, 's6': 6, 'x': 7, '+': 8, '3d': 0}
+    'o': 0, 's': 1, 'd': 2, '^': 3, 'p': 4,
+    'h': 5, 's6': 6, 'x': 7, '+': 8, '3d': 0}
 
 
 class FurySuperNode:

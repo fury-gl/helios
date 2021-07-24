@@ -1,4 +1,16 @@
-"""Module that provides some objects to deal with inter-process communication
+"""Inter-Process communication tools
+
+This Module provides abstract classes and objects to deal with inter-process
+communication.
+
+References
+----------
+    [1]“Python GSoC - Post #3: Network layout algorithms using IPC -
+    demvessias’s Blog.”
+    `blogs.python-gsoc.org/en/demvessiass-blog/post-3
+    <https://blogs.python-gsoc.org/en/demvessiass-blog/post-3-network-layout-algorithms-using-ipc/>`_ 
+    (accessed Jul. 24, 2021).
+
 """
 
 import numpy as np
@@ -14,19 +26,24 @@ else:
 
 
 class GenericArrayBufferManager(ABC):
+    """This implements a abstract (generic) ArrayBufferManager.
+
+    The GenericArrayBufferManager is used for example to share the
+    positions, edges and weights between different process.
+
+    """
     def __init__(
             self, dimension, dtype='float64', num_elements=None):
-        """This implements a abstract (generic) ArrayBufferManager.
-        The GenericArrayBufferManager is used for example to share the
-        positions, edges and weights between different process.
-
-       Parameters
+        """
+        
+        Parameters
         ----------
         dimension : int
         dtype : dtype
         num_elements : int, optional
-                In MacOs a shared memory resource can be created with
-                a different number of elements then the original data
+            In MacOs a shared memory resource can be created with
+            a different number of elements then the original data
+
         """
         self._dtype = dtype
         self._dimension = dimension
@@ -46,25 +63,29 @@ class GenericArrayBufferManager(ABC):
 
 
 class SharedMemArrayManager(GenericArrayBufferManager):
+    """An implementation of a GenericArrayBufferManager using SharedMemory
+
+    """
     def __init__(
             self,  dimension, dtype, data=None, buffer_name=None,
             num_elements=None):
-        """An implementation of a GenericArrayBufferManager using SharedMemory
+        """
 
-        Parameters:
-        -----------
-            dimension : int
-                number of columns
-            dtype : str
-                type of the ndarray
-            data : ndarray
-                bi-dimensional array
-            buffer_name : str
-                buffer_name, if you pass that, then
-                this Obj. will try to load the memory resource
-            num_elements : int, optional
-                In MacOs a shared memory resource can be created with
-                a different number of elements then the original data
+        Parameters
+        ----------
+        dimension : int
+            number of columns
+        dtype : str
+            type of the ndarray
+        data : ndarray
+            bi-dimensional array
+        buffer_name : str
+            buffer_name, if you pass that, then
+            this Obj. will try to load the memory resource
+        num_elements : int, optional
+            In MacOs a shared memory resource can be created with
+            a different number of elements then the original data
+
         """
         super().__init__(dimension, dtype, num_elements)
         self._released = False
@@ -145,28 +166,29 @@ class SharedMemArrayManager(GenericArrayBufferManager):
 
 
 class ShmManagerMultiArrays:
-    def __init__(self):
-        """This Obj. allows to deal with multiple arrays
+    """This Obj. allows to deal with multiple arrays
         stored using SharedMemory
-
-        """
+    """
+    def __init__(self):
         self._shm_attr_names = []
 
     def add_array(self, attr_name, data, dimension, dtype):
         """This creates a shared memory resource
-        to store the data. The shared memory obj will be accessible
+        to store the data.
+
+        The shared memory obj will be accessible
         through
 
         >>> self.attr_name
 
-        Parameters:
-        -----------
-            attr_name: str
-                used to associate a new attribute 'attr_name'
-                with the current (self) ShmManagerMultiArrays.
-            data : ndarray
-            dimension : int
-            dtype : str
+        Parameters
+        ----------
+        attr_name: str
+            used to associate a new attribute 'attr_name'
+            with the current (self) ShmManagerMultiArrays.
+        data : ndarray
+        dimension : int
+        dtype : str
 
         """
         if attr_name in self._shm_attr_names:
@@ -187,17 +209,17 @@ class ShmManagerMultiArrays:
 
         >>> self.attr_name
 
-        Parameters:
-        -----------
-            attr_name : str
-                this name will be used to associate a new attribute 'attr_name'
-                with the current (self) ShmManagerMultiArrays.
-            buffer_name : str
-            dimension : int
-            dtype : str
-            num_elements : int, optional
-                In MacOs a shared memory resource can be created with
-                a different number of elements then the original data
+        Parameters
+        ----------
+        attr_name : str
+            this name will be used to associate a new attribute 'attr_name'
+            with the current (self) ShmManagerMultiArrays.
+        buffer_name : str
+        dimension : int
+        dtype : str
+        num_elements : int, optional
+            In MacOs a shared memory resource can be created with
+            a different number of elements then the original data
 
         """
         if attr_name in self._shm_attr_names:

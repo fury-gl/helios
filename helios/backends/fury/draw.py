@@ -1,9 +1,21 @@
+"""FURY NetworkDraw
+
+"""
 from fury import window
 
 from helios.backends.fury.actors import NetworkSuperActor
 
 
 class NetworkDraw(NetworkSuperActor):
+    """This object is responsible to deal with the drawing of the network.
+
+    Attributes
+    ----------
+        showm : ShowManager
+            A ShowManager instance from FURY
+            `fury.gl/fury.window.html#showmanager <https://fury.gl/latest/reference/fury.window.html#showmanager>`_
+
+    """
     def __init__(
         self,
         positions,
@@ -25,11 +37,10 @@ class NetworkDraw(NetworkSuperActor):
         **kwargs
 
     ):
-        """This object is responsible to deal with the drawing of the network.
+        """
 
-        Parameters:
-        -----------
-
+        Parameters
+        ----------
         positions : ndarray
             Array of the nodes positions.
         edges : ndarray, optional
@@ -55,11 +66,14 @@ class NetworkDraw(NetworkSuperActor):
         edge_line_width : float or ndarray, optional
             Width of the edges.
         better_performance : bool, optional
+            Improves the performance of the draw function.
         write_frag_depth : bool, optional
+            Writes in the depth buffer.
         window_size : tuple, optional
             Size of the window.
-        showm : showm, optional
+        showm : ShowManager, optional
             Fury ShowManager instance.
+            `fury.gl/fury.window.html#showmanager <https://fury.gl/latest/reference/fury.window.html#showmanager>`_
 
         """
         if better_performance:
@@ -106,9 +120,11 @@ class NetworkDraw(NetworkSuperActor):
 
     def refresh(self):
         """This will refresh the FURY window instance.
+
         Call this method every time that you change any property in the
         network like positions, colors etc
 
         """
+        ...
         self.window.Render()
         self.iren.Render()
