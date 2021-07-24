@@ -1,4 +1,26 @@
-"""Minimum-Distortion Embedding"""
+"""IPC-PyMDE: Minimum-Distortion Embedding Network Layout
+
+This module implements a IPC Network Layout to be used with PyMDE[1].
+The IPC layout grants a non-blocking behavior for PyMDE.
+PyMDE solves minimum-distortion embedding problem using pytorch.
+
+References
+----------
+    [1] A. Agrawal, A. Ali, and S. Boyd, “Minimum-Distortion Embedding,”
+    arXiv:2103.02559 [cs, math, stat], Mar. 2021, Accessed: Jul. 24, 2021.
+    `http://arxiv.org/abs/2103.02559 <http://arxiv.org/abs/2103.02559>`_
+
+Notes
+-----
+    Python 3.8 or greater is a requirement for this module.
+
+
+Attributes
+----------
+_CONSTRAINTS : dict
+_PENALTIES : dict
+
+"""
 import numpy as np
 import torch
 import pymde
@@ -206,13 +228,15 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
 
 class MDE(NetworkLayoutIPCRender):
     """Minimum Distortion Embedding algorithm running on IPC 
-  
+
     This call  the PyMDE lib running in a different process which comunicates
     with this object through SharedMemory from python>=3.8.
 
     References
     ----------
-    [1] PyMDE
+    [1] A. Agrawal, A. Ali, and S. Boyd, “Minimum-Distortion Embedding,”
+    arXiv:2103.02559 [cs, math, stat], Mar. 2021, Accessed: Jul. 24, 2021.
+    `http://arxiv.org/abs/2103.02559 <http://arxiv.org/abs/2103.02559>`_
 
     Notes
     -----

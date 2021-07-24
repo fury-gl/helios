@@ -1,7 +1,9 @@
 {{ fullname | escape | underline}}
 
+
 .. automodule:: {{ fullname }}
    
+
    {% block functions %}
    {% if functions %}
    .. rubric:: {{ _('Functions') }}

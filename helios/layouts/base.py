@@ -3,6 +3,7 @@
 This module provides a set of abstract classes to deal with
 different network layouts algorithms using different communication
 strategies.
+
 """
 
 from abc import ABC, ABCMeta, abstractmethod

@@ -22,7 +22,9 @@ Helios Network Visualization
    :hidden:
 
    installation
-   getting_started
+   getting_started_visual_aspects
+   getting_started_layouts
+   getting_started_streaming
    examples_gallery/index
 
 

@@ -1,4 +1,6 @@
-"""FURY NetworkDraw"""
+"""FURY NetworkDraw
+
+"""
 from fury import window
 
 from helios.backends.fury.actors import NetworkSuperActor
@@ -6,6 +8,12 @@ from helios.backends.fury.actors import NetworkSuperActor
 
 class NetworkDraw(NetworkSuperActor):
     """This object is responsible to deal with the drawing of the network.
+
+    Attributes
+    ----------
+        showm : ShowManager
+            A ShowManager instance from FURY
+            `fury.gl/fury.window.html#showmanager <https://fury.gl/latest/reference/fury.window.html#showmanager>`_
 
     """
     def __init__(
@@ -63,8 +71,9 @@ class NetworkDraw(NetworkSuperActor):
             Writes in the depth buffer.
         window_size : tuple, optional
             Size of the window.
-        showm : showm, optional
+        showm : ShowManager, optional
             Fury ShowManager instance.
+            `fury.gl/fury.window.html#showmanager <https://fury.gl/latest/reference/fury.window.html#showmanager>`_
 
         """
         if better_performance:

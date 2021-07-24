@@ -21,7 +21,6 @@ parser.add_argument(
 args = parser.parse_args()
 
 interactive = args.interactive
-print(interactive)
 depth = 9
 n_items = 2**(depth + 1) - 1
 

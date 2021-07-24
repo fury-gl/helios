@@ -1,8 +1,15 @@
-"""
-Inter-Process communication tools
-==================================
+"""Inter-Process communication tools
 
-This Module provides some objects to deal with inter-process communication
+This Module provides abstract classes and objects to deal with inter-process
+communication.
+
+References
+----------
+    [1]“Python GSoC - Post #3: Network layout algorithms using IPC -
+    demvessias’s Blog.”
+    `blogs.python-gsoc.org/en/demvessiass-blog/post-3
+    <https://blogs.python-gsoc.org/en/demvessiass-blog/post-3-network-layout-algorithms-using-ipc/>`_ 
+    (accessed Jul. 24, 2021).
 
 """
 

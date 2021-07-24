@@ -75,6 +75,8 @@ sphinx_gallery_conf = {
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
+    'numpy': ('http://docs.scipy.org/doc/numpy/', None),
+    "fury": ("https://fury.gl/latest/", None),
 }
 
 autosummary_generate = 'IN_READTHEDOCS' not in os.environ.keys()  # Turn on sphinx.ext.autosummary

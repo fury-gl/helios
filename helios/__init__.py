@@ -1,5 +1,5 @@
 """
-API reference documentation for the example `mytoolbox` package.
+API reference
 """
 from helios.backends.fury.draw import NetworkDraw
 

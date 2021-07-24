@@ -1,10 +1,9 @@
-"""
-ForceAtlas2 cuGraph
-===================
+"""IPC-ForceAtlas2: Network Layout using cuGraph
 
 ForceAtlas2 layout algorithm through IPC using cuGraph.
 
 """
+
 import numpy as np
 
 try:

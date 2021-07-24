@@ -1,4 +1,10 @@
-"""VTK/FURY Super Actors"""
+"""VTK Super Actors
+
+This modules contains the VTK super actors to be used in the 
+network visualization.
+
+
+"""
 
 import numpy as np
 from fury.shaders import add_shader_callback, attribute_to_actor

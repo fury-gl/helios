@@ -1,4 +1,13 @@
-"""Force-Directed Layout oct-tree"""
+"""Helios Force-Directed Layout using octree
+
+References
+----------
+    [1] Fruchterman, T. M. J., & Reingold, E. M. (1991). Graph Drawing
+    by Force-Directed Placement. Software: Practice and Experience, 21(11).
+    [2] Y. Hu, “Efficient, High-Quality Force-Directed Graph Drawing,” The
+    Mathematica Journal, p. 35, 2006.
+
+"""
 
 import numpy as np
 import heliosFR
@@ -44,6 +53,11 @@ class HeliosFr(NetworkLayoutAsync):
             When you set this to a value greater than zero the
             helios-fr will wait to perform each step. This can be used
             to reduce the CPU consumption
+
+        Attributes
+        ----------
+        network_draw : NetworkDraw
+            The NetworkDraw Instance
 
         """
 

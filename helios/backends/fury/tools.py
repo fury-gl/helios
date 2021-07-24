@@ -1,4 +1,8 @@
-"""VTK/FURY tools """
+"""VTK/FURY Tools
+
+This module implements a set o tools to enhance VTK given new functionalities.
+
+"""
 
 
 class Uniform:
@@ -73,16 +77,17 @@ class Uniforms:
         Examples
         --------
 
-        ```python
-        uniforms = [
-            Uniform(name='edgeWidth', uniform_type='f', value=edgeWidth)...
-        ]
-        CustomUniforms = Uniforms(markerUniforms)
-        add_shader_callback(
-                sq_actor, CustomUniforms)
-        sq_actor.CustomUniforms = CustomUniforms
-        sq_actor.CustomUniforms.edgeWidth = 0.5
-        ```
+        .. highlight:: python
+        .. code-block:: python
+
+            uniforms = [
+                Uniform(name='edgeWidth', uniform_type='f', value=edgeWidth)...
+            ]
+            CustomUniforms = Uniforms(markerUniforms)
+            add_shader_callback(
+                    sq_actor, CustomUniforms)
+            sq_actor.CustomUniforms = CustomUniforms
+            sq_actor.CustomUniforms.edgeWidth = 0.5
 
         """
         self.uniforms = uniforms
