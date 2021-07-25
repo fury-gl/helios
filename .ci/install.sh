@@ -1,8 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 set -x
 
 sudo apt-get update && sudo apt-get install libgl1-mesa-glx xvfb -y
 export DISPLAY=:99.0
+export PYVISTA_OFF_SCREEN=True
 which Xvfb
 Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 # Debugging commands:
@@ -10,5 +11,4 @@ Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 # sh -e /etc/init.d/xvfb start
 # give xvfb some time to start
 sleep 3
-
 set +x
