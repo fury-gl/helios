@@ -1,7 +1,7 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Helios application
+name: Helios Test 
 
 on:
   push:
@@ -40,4 +40,15 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pytest -svv -k 'not test_layout_forceatlas2gpu.py'
+        pytest -svv -k 'not test_layout_forceatlas2gpu.py' --cov=./ --cov-report=xml
+      
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        directory: ./coverage/reports/
+        env_vars: OS,PYTHON
+        fail_ci_if_error: true
+        flags: unittests
+        name: codecov-umbrella
+        path_to_write_report: ./coverage/codecov_report.txt
+        verbose: true
