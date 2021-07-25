@@ -15,7 +15,7 @@ def test_network_draw_only_nodes_2d_symbols(interactive=False):
     )
     network_draw = NetworkDraw(
             positions=positions,
-            scales=1,
+            scales=.5,
             colors=(0, 1, 0),
             node_opacity=1,
             node_edge_width=0,
