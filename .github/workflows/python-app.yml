@@ -24,8 +24,6 @@ jobs:
     - name: Install Xvfb and mesa
       run: |
         sudo apt-get install libgl1-mesa-dev xvfb
-        export DISPLAY=:99.0
-        Xvfb :99 +extension GLX -screen 0 1024x768x24 2>&1 >/dev/null &
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -40,4 +38,6 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
+        export DISPLAY=:99.0
+        Xvfb :99 +extension GLX -screen 0 1024x768x24 2>&1 >/dev/null &
         pytest -svv
