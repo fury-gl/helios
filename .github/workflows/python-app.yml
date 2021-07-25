@@ -24,6 +24,7 @@ jobs:
     - name: Install Xvfb and mesa
       run: |
         sudo apt-get install libgl1-mesa-dev xvfb
+        export DISPLAY=:99.0
         Xvfb :99 +extension GLX -screen 0 1024x768x24 2>&1 >/dev/null &
     - name: Install dependencies
       run: |
