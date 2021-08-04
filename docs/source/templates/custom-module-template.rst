@@ -3,9 +3,26 @@
 
 .. automodule:: {{ fullname }}
 
+   {% block table %}
+   {% if classes %}
+   
+   List of Objects
+   ---------------
+   {% for objname in classes %}
+      `{{objname}},  <#{{fullname}}.{{objname}}>`_
+
+   {%- endfor %}
+   {% endif %}
+   {% if functions %}
+   List of Functions
+   -----------------
+   {% for function in functions %}
+      `{{function}},  <#{{fullname}}.{{function}}>`_
+   {%- endfor %}
+   {% endif %}
+   {% endblock %}
    {% block functions %}
    {% if functions %}
-   .. rubric:: {{ _('Functions') }}
 
    .. autosummary::
       :toctree:
