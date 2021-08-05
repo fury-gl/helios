@@ -35,13 +35,31 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'sphinxext.opengraph',
     # 'IPython.sphinxext.ipython_directive',
     # 'IPython.sphinxext.ipython_console_highlighting',
     'matplotlib.sphinxext.plot_directive',
     'sphinx_copybutton',
     'ablog',
 ]
+ogp_site_url = "http://heliosnetwork.io/"
+ogp_image = "https://heliosnetwork.io/_images/logo.png"
+ogp_description_length = 300
 
+description = "\
+Helios is a Python library aiming at providing an easy way to visualize and streaming huge \
+networks dynamically. It incorporates state-of-the-art layout algorithms and new data \
+optimized rendering techniques to provide a high level of interactivity and \
+responsiveness."
+#description = ' Helios is a Python library  to visualize huge networks dynamically.'
+
+ogp_custom_meta_tags = [
+    f'<meta name="description" content="{description}">',
+    '<meta name="image" content="https://heliosnetwork.io/_images/helios-og-face.png">',
+    '<meta name="twitter:card" content="summary">',
+    f'<meta name="twitter:description" content="{description}">',
+    '<meta name="og:type" content="website">'
+]
 # if 'IN_READTHEDOCS' not in os.environ.keys():
 extensions.append('sphinx_gallery.gen_gallery')
 # -- Options for sphinx gallery -------------------------------------------
