@@ -8,12 +8,12 @@ def test_shared_mem_array():
     dimension = 2
     arr = np.random.normal(size=(4, dimension))
     shm = ipc.SharedMemArrayManager(
-        data=arr, dimension=dimension, dtype=arr.dtype)
+        data=arr)
     npt.assert_equal(shm._repr, arr)
 
     shm_h = ipc.SharedMemArrayManager(
         buffer_name=shm._buffer_name,
-        dimension=dimension, dtype=arr.dtype
+        dtype=arr.dtype
     )
     shm_h._repr[0] = np.array([-1, -1]).astype(arr.dtype)
     npt.assert_equal(shm_h._repr, shm._repr)
@@ -22,7 +22,7 @@ def test_shared_mem_array():
 
     arr = np.random.normal(size=4)
     shm = ipc.SharedMemArrayManager(
-        data=arr, dimension=1, dtype=arr.dtype)
+        data=arr, dtype=arr.dtype)
     assert shm._repr.ndim == 1
 
 
@@ -31,20 +31,18 @@ def test_shm_manager_multi_arrays():
     arr2d = np.random.normal(size=(4, 2))
     arr1d = np.random.normal(size=5)
     shm_manager.add_array(
-        attr_name='arr2d', data=arr2d,
-        dimension=2, dtype=arr2d.dtype)
+        attr_name='arr2d', data=arr2d)
     shm_manager.add_array(
-        attr_name='arr1d', data=arr1d,
-        dimension=1, dtype=arr1d.dtype)
+        attr_name='arr1d', data=arr1d)
     npt.assert_equal(shm_manager.arr2d._repr, arr2d)
     npt.assert_equal(shm_manager.arr1d._repr, arr1d)
 
     shm_manager_h = ipc.ShmManagerMultiArrays()
     shm_manager_h.load_array(
         attr_name='arr2d_h', buffer_name=shm_manager.arr2d._buffer_name,
-        dimension=2, dtype=arr2d.dtype)
+        dtype=arr2d.dtype)
     shm_manager_h.load_array(
         attr_name='arr1d_h', buffer_name=shm_manager.arr1d._buffer_name,
-        dimension=1, dtype=arr1d.dtype)
+        dtype=arr1d.dtype)
     npt.assert_equal(shm_manager_h.arr2d_h._repr, arr2d)
     npt.assert_equal(shm_manager_h.arr1d_h._repr, arr1d)
