@@ -29,7 +29,6 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
         info_buffer_name,
         weights_buffer_name=None,
         snapshots_buffer_name=None,
-        num_snapshots=0,
         lin_log_mode=False,
         edge_weight_influence=1.0,
         jitter_tolerance=1.0,
@@ -51,7 +50,6 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
         info_buffer_name : str
         weights_buffer_name : str, optional
         snapshots_buffer_name : str, optional
-        num_snapshots : int, optional
         lin_log_mode : bool, default False
         edge_weight_influence : float, default 1.0
         jitter_tolerance : float, default 1.0
@@ -67,9 +65,7 @@ class ForceAtlas2ServerCalc(NetworkLayoutIPCServerCalc):
             positions_buffer_name,
             info_buffer_name,
             weights_buffer_name,
-            2,
             snapshots_buffer_name,
-            num_snapshots
         )
         self._vertex = np.arange(0, self._shm_manager.positions._repr.shape[0])
 
@@ -220,7 +216,6 @@ class ForceAtlas2(NetworkLayoutIPCRender):
         if self._record_positions:
             s += 'snapshots_buffer_name='
             s += f'"{self._shm_manager.snapshots_positions._buffer_name}",'
-            s += f'num_snapshots={steps},'
         s += 'lin_log_mode ='
         s += f'{self.lin_log_mode},'
         s += 'edge_weight_influence ='
