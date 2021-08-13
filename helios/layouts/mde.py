@@ -53,73 +53,55 @@ _PENALTIES = {
 class MDEServerCalc(NetworkLayoutIPCServerCalc):
     def __init__(
         self,
-        num_nodes,
-        num_edges,
         edges_buffer_name,
         positions_buffer_name,
         info_buffer_name,
-        dimension=3,
         weights_buffer_name=None,
         snapshots_buffer_name=None,
-        num_snapshots=0,
         penalty_name=None,
         penalty_parameters_buffer_name=None,
-        num_penalty_parameters=None,
         attractive_penalty_name='log1p',
         repulsive_penalty_name='log',
         use_shortest_path=False,
         constraint_name=None,
         constraint_anchors_buffer_name=None,
-        num_anchors=None,
     ):
         """This Obj. reads the network information stored in a shared memory
         resource and execute the MDE layout algorithm
 
         Parameters
         -----------
-        num_nodes : int
-        num_edges : int
         edges_buffer_name : str
         positions_buffer_name : str
         info_buffer_name : str
         weights_buffer_name : str, optional
         snapshots_buffer_name : str, optional
-        num_snapshots : int, optional
-        dimension=3 : int, optional
-            layout dimension
         penalty_name : str, optional
         penalty_parameters_buffer_name : str, optional
-        num_penalty_parameters : int, optional
         attractive_penalty_name : str, optional
         repulsive_penalty_name : str, optional
         use_shortest_path : str, optional
         constraint_name : str, optional
         constraint_anchors_buffer_name : str, optional
-        num_anchors : int, optional
 
         """
         super().__init__(
-            num_nodes,
-            num_edges,
             edges_buffer_name,
             positions_buffer_name,
             info_buffer_name,
             weights_buffer_name,
-            dimension,
             snapshots_buffer_name,
-            num_snapshots
         )
         self._positions_torch = torch.tensor(
             self._shm_manager.positions.data)
+        
         edges_torch = torch.tensor(
             self._shm_manager.edges.data)
-
         if weights_buffer_name is not None:
             weights_torch = torch.tensor(
                 self._shm_manager.weights.data)
         else:
             weights_torch = torch.ones(edges_torch.shape[0])
-
         if use_shortest_path and penalty_name is None:
             g_torch = pymde.Graph.from_edges(edges_torch, weights_torch)
             shortest_paths_graph = pymde.preprocess.graph.shortest_paths(
@@ -128,7 +110,7 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
             distortion = pymde.losses.WeightedQuadratic(
                 shortest_paths_graph.distances)
         elif penalty_name is None:
-            distortion = pymde.penalties.WeightedQuadratic(weights_torch)
+            distortion = pymde.losses.WeightedQuadratic(weights_torch)
         else:
             if penalty_name in _PENALTIES.keys():
                 func = _PENALTIES[penalty_name]
@@ -146,9 +128,7 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
                     self._shm_manager.load_array(
                         'penalty_parameters',
                         penalty_parameters_buffer_name,
-                        1,
                         'float32',
-                        num_penalty_parameters
                     )
                     distortion = func(
                         weights_torch,
@@ -171,10 +151,9 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
                     self._shm_manager.load_array(
                         'anchors',
                         constraint_anchors_buffer_name,
-                        self._dimension+1,
                         'float32',
-                        num_anchors
                     )
+                    num_anchors = self._shm_manager.anchors._num_rows
                     torch_anchors = torch.tensor(
                         self._shm_manager.anchors._repr[
                             0:num_anchors, self._dimension].astype('int64')
@@ -184,7 +163,6 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
                             0:num_anchors, 0:self._dimension]
                     )
 
-                    print(torch_anchors_pos)
                     constraint = pymde.Anchored(
                         anchors=torch_anchors, values=torch_anchors_pos)
                 else:
@@ -194,7 +172,6 @@ class MDEServerCalc(NetworkLayoutIPCServerCalc):
                 raise ValueError(
                     'The constraint valid names are: ' +
                     f'{list(_CONSTRAINTS.keys())}')
-
         self.mde = pymde.MDE(
            self._shm_manager.positions._repr.shape[0],
            self._dimension,
@@ -308,7 +285,6 @@ class MDE(NetworkLayoutIPCRender):
             self._shm_manager.add_array(
                 'anchors',
                 data=np.c_[anchors_pos, anchors],
-                dimension=self._dimension+1,
                 dtype='float32'
             )
 
@@ -331,7 +307,6 @@ class MDE(NetworkLayoutIPCRender):
             self._shm_manager.add_array(
                 'penalty_parameters',
                 np.array(penalty_parameters),
-                dimension=1,
                 dtype='float32'
             )
         else:
@@ -358,10 +333,6 @@ class MDE(NetworkLayoutIPCRender):
         s += 'from fury.stream.tools import remove_shm_from_resource_tracker;'
         s += 'remove_shm_from_resource_tracker();'
         s += 'mde_h = MDEServerCalc('
-        s += 'num_nodes='
-        s += f'{self._num_nodes},'
-        s += 'num_edges='
-        s += f'{self._num_edges},'
         s += f'edges_buffer_name="{self._shm_manager.edges._buffer_name}",'
         s += 'positions_buffer_name='
         s += f'"{self._shm_manager.positions._buffer_name}",'
@@ -373,15 +344,12 @@ class MDE(NetworkLayoutIPCRender):
         if self._record_positions:
             s += 'snapshots_buffer_name='
             s += f'"{self._shm_manager.snapshots_positions._buffer_name}",'
-            s += f'num_snapshots={steps},'
         s += f'use_shortest_path={self._use_shortest_path},'
         if self._constraint_name is not None:
             s += f'constraint_name="{self._constraint_name}",'
             if self._constraint_name == 'anchored':
                 s += 'constraint_anchors_buffer_name='
                 s += f'"{self._shm_manager.anchors._buffer_name}",'
-                s += 'num_anchors='
-                s += f'{self._shm_manager.anchors._num_elements},'
 
         if self._penalty_name is not None:
             s += f'penalty_name="{self._penalty_name}",'
@@ -393,8 +361,6 @@ class MDE(NetworkLayoutIPCRender):
         if self._penalty_parameters is not None:
             s += 'penalty_parameters_buffer_name='
             s += f'"{self._shm_manager.penalty_parameters._buffer_name}",'
-            s += 'num_penalty_parameters='
-            s += f'{self._shm_manager.penalty_parameters._num_elements},'
-        s += f'dimension={self._dimension});'
+        s += ');'
         s += f'mde_h.start({steps},{iters_by_step});'
         return s

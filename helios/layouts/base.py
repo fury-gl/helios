@@ -82,58 +82,49 @@ class NetworkLayoutIPCServerCalc(ABC):
 
     def __init__(
         self,
-        num_nodes,
-        num_edges,
         edges_buffer_name,
         positions_buffer_name,
         info_buffer_name,
         weights_buffer_name=None,
-        dimension=3,
         snaphosts_buffer_name=None,
-        num_snapshots=0,
     ):
         """
 
         Parameters
         ----------
-        num_nodes : int
-        num_edges : int
         edges_buffer_name : str
         positions_buffer_name : str
         info_buffer_name : str
         weights_buffer_name : str, optional
-        dimension : int
         snaphosts_buffer_name : str, optional
-        num_snapshots : int, optional
 
         """
-        self._dimension = dimension
 
         self._shm_manager = ShmManagerMultiArrays()
         self._shm_manager.load_array(
-            'info', buffer_name=info_buffer_name, dimension=1,
-            dtype='float32', num_elements=3)
+            'info', buffer_name=info_buffer_name,
+            dtype='float32')
         self._shm_manager.load_array(
             'positions', buffer_name=positions_buffer_name,
-            dimension=self._dimension,
-            dtype='float32', num_elements=num_nodes)
+            dtype='float32')
+        self._dimension = self._shm_manager.positions._dimension
 
         self._shm_manager.load_array(
             'edges', buffer_name=edges_buffer_name,
-            dimension=2, dtype='int64', num_elements=num_edges)
+            dtype='int64')
 
         if weights_buffer_name is not None:
             self._shm_manager.load_array(
                 'weights', buffer_name=weights_buffer_name,
-                dimension=1, dtype='float32', num_elements=num_edges)
+                dtype='float32')
 
         self._record_positions = snaphosts_buffer_name is not None
         if self._record_positions:
             self._shm_manager.load_array(
                 'snapshots_positions', buffer_name=snaphosts_buffer_name,
-                dimension=self._dimension, dtype='float32',
-                num_elements=num_nodes*num_snapshots)
-            self._num_snapshots = num_snapshots
+                dtype='float32')
+            self._num_snapshots = self._shm_manager.snapshots_positions.\
+                _num_rows
 
     @abstractmethod
     def start(self, steps=100, iters_by_step=3):
@@ -202,26 +193,21 @@ class NetworkLayoutIPCRender(ABC):
         self._shm_manager.add_array(
             'positions',
             network_draw.positions[:, 0:self._dimension],
-            self._dimension,
             'float32'
         )
         self._shm_manager.add_array(
             'info',
-            np.array([0, 0, 0]),
-            1,
-            'float32'
+            np.array([0, 0, 0]).astype('float32'),
         )
         self._shm_manager.add_array(
             'edges',
             edges,
-            2,
             'int64'
         )
         if weights is not None:
             self._shm_manager.add_array(
                 'weights',
                 weights,
-                1,
                 'float32'
             )
         self._num_nodes = network_draw.positions.shape[0]
@@ -301,17 +287,15 @@ class NetworkLayoutIPCRender(ABC):
             return
 
         self._record_positions = record_positions
-        if record_positions:
+        if self._record_positions:
             self._shm_manager.add_array(
                 'snapshots_positions',
                 np.zeros(
                     (
-                        self._shm_manager.positions._num_elements*steps,
-                        self._dimension
+                        self._shm_manager.positions._num_rows*steps,
+                        self._shm_manager.positions._dimension
                     )
-                ),
-                self._dimension,
-                'float32'
+                ).astype('float32'),
             )
             self._steps = steps
             self._current_step = 0
