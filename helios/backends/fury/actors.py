@@ -69,6 +69,8 @@ class FurySuperLabels:
                     self.vtk_actor, self.Uniforms)
 
         self._init_shader_frag()
+        self._should_update_labels = False
+        self._should_update_positions = False
 
     def _init_actor(self, colors, scales):
 
@@ -188,9 +190,7 @@ class FurySuperLabels:
     def positions(self):
         pass
 
-    def recompute_labels(
-            self, update_labels=True, update_center=True,):
-
+    def recompute_labels(self):
         padding, labels_positions,\
             uv, relative_sizes = \
             text_tools.get_positions_labels_billboards(
@@ -198,15 +198,17 @@ class FurySuperLabels:
                 align=self.align,
                 x_offset_ratio=self.x_offset_ratio,
                 y_offset_ratio=self.y_offset_ratio)
-        if update_labels:
+        if self._should_update_labels:
             padding = np.repeat(padding, 4, axis=0)
             self._padding[:] = padding
             self._uv[:] = uv
             self._relative_sizes[:] = relative_sizes
-        if update_center:
+            self._should_update_labels = False
+        if self._should_update_positions:
             self._centers_geo[:] = np.repeat(
                 labels_positions, self._centers_length, axis=0)
             self._verts_geo[:] = self._verts_geo_orig + self._centers_geo
+            self._should_update_positions = False
 
         self.update()
 
@@ -218,6 +220,7 @@ class FurySuperLabels:
     @positions.setter
     def positions(self, positions):
         self._label_center = positions
+        self._should_update_positions = True
 
     @property
     def labels(self):
@@ -229,6 +232,7 @@ class FurySuperLabels:
             labels = pad_labels(
                 labels, self._min_label_size, align=self.align)
         self._labels = labels
+        self._should_update_labels = True
 
     @property
     def colors(self):
@@ -988,7 +992,8 @@ class NetworkSuperActor():
         edge_line_opacity=.5,
         edge_line_width=1,
         write_frag_depth=True
-    ):
+    ):  
+        self.showm = None
         self._is_2d = positions.shape[1] == 2
         if self._is_2d:
             positions = np.array([
@@ -1017,6 +1022,28 @@ class NetworkSuperActor():
             self.vtk_actors += [edges.vtk_actor]
 
         self.edges = edges
+        self.labels = None
+
+    def add_labels(
+            self, labels, align='center',
+            colors=(0, 0, 1),
+            x_offset_ratio=1, y_offset_ratio=1,
+            min_label_size=None, scales=1):
+        if self.labels is not None:
+            return
+        network_labels = FurySuperLabels(
+            positions=self.nodes.positions,
+            labels=labels,
+            colors=colors,
+            align=align,
+            x_offset_ratio=x_offset_ratio,
+            y_offset_ratio=y_offset_ratio,
+            min_label_size=min_label_size,
+            scales=scales
+        )
+        self.labels = network_labels
+        self.vtk_actors += [network_labels.vtk_actor]
+        self.showm.scene.add(network_labels.vtk_actor)
 
     @property
     def positions(self):
@@ -1031,6 +1058,10 @@ class NetworkSuperActor():
         self.nodes.positions = positions
         if self.edges is not None:
             self.edges.positions = positions
+        if self.labels is not None:
+            self.labels.positions = positions
+            self.labels.recompute_labels()
+        self.update()
 
     def update(self):
         for actor in self.vtk_actors:

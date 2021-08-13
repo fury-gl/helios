@@ -1,16 +1,12 @@
 
 import numpy as np
 from helios import NetworkDraw
-from helios.backends.fury.actors import FurySuperLabels
 
 
 def test_text_draw():
     interactive = False
-    centers = np.array([
-        [0, 0, 0],
-        [1, 0, 0.],
-        [0, 1., 0.]
-    ])*5
+    centers = np.random.normal(0, 0.1, size=(100, 3))
+
     network_draw = NetworkDraw(
             positions=centers,
             scales=0.1,
@@ -25,25 +21,21 @@ def test_text_draw():
         return labels
 
     labels = get_labels(centers)
-    # generate random labels
-    network_labels = FurySuperLabels(
-        centers,
-        labels,
-        min_label_size=50,
-        scales=0.1
-    )
-    network_draw.showm.scene.add(network_labels.vtk_actor)
 
+    network_draw.add_labels(labels, min_label_size=50, scales=.1)
+    network_labels = network_draw.labels
     dx = np.array([
         [-1, 0, 1],
         [1, 0, 1],
         [0, 1, 1]
     ])
+    dx = 5
     data = {'i': 0.}
-    total = 100
+    total = 10
     if interactive:
         def update_positions(_, __):
-            new_positions = centers + dx*data['i']/total
+            # new_positions = centers + dx*data['i']/total
+            new_positions = centers + centers*data['i']/total
             network_draw.positions = new_positions
             network_labels.positions = new_positions
             labels = get_labels(new_positions)
@@ -54,7 +46,7 @@ def test_text_draw():
         network_draw.showm.add_timer_callback(True, 10, update_positions)
         network_draw.showm.start()
     else:
-        new_positions = centers + d
+        new_positions = centers + dx
         network_draw.positions = new_positions
         network_labels.positions = new_positions
         labels = get_labels(new_positions)
