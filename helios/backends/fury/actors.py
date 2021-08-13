@@ -5,7 +5,7 @@ network visualization.
 
 
 """
-
+import vtk
 import numpy as np
 from fury.shaders import add_shader_callback, attribute_to_actor
 from fury.shaders import shader_to_actor, load
@@ -14,18 +14,239 @@ from fury.utils import get_actor_from_primitive
 from fury.utils import vertices_from_actor, array_from_actor
 from fury.utils import update_actor
 from fury.actor import line as line_actor
+from fury.utils import one_chanel_to_vtk
 try:
     from fury.shaders import shader_apply_effects
 except ImportError:
     shader_apply_effects = None
 
 from fury import window
+from fury import text_tools
 
 from helios.backends.fury.tools import Uniform, Uniforms
+from helios.backends.labels import pad_labels
 
 _MARKER2Id = {
     'o': 0, 's': 1, 'd': 2, '^': 3, 'p': 4,
     'h': 5, 's6': 6, 'x': 7, '+': 8, '3d': 0}
+
+
+class FurySuperLabels:
+    def __init__(
+        self,
+        positions,
+        labels,
+        colors=(0, 1, 0),
+        scales=1,
+        align='center',
+        x_offset_ratio=1.,
+        y_offset_ratio=1.,
+        min_label_size=None,
+    ):
+
+        self._min_label_size = min_label_size
+        if min_label_size is not None:
+            labels = pad_labels(labels, min_label_size, align=align)
+
+        self._labels = labels
+        self._scales = scales
+        self.align = align
+        self.x_offset_ratio = x_offset_ratio
+        self.y_offset_ratio = y_offset_ratio
+        self._label_center = positions
+        self._label_count = self._label_center.shape[0]
+        self._should_update_labels = False
+        self._should_update_positions = False
+        self._img_arr, self._char2pos = text_tools.create_bitmap_font()
+        self._init_actor(
+            colors, scales)
+        
+        self.uniforms_list = []
+
+        if len(self.uniforms_list) > 0:
+            self.Uniforms = Uniforms(self.uniforms_list)
+            self.uniforms_observerId = add_shader_callback(
+                    self.vtk_actor, self.Uniforms)
+
+        self._init_shader_frag()
+
+    def _init_actor(self, colors, scales):
+
+        padding, labels_positions,\
+            uv, relative_sizes = \
+            text_tools.get_positions_labels_billboards(
+                self._labels, self._label_center, self._char2pos, scales,
+                align=self.align,
+                x_offset_ratio=self.x_offset_ratio,
+                y_offset_ratio=self.y_offset_ratio)
+        # to avoid memory corruption
+        num_chars = labels_positions.shape[0]
+        self._vcount = num_chars
+        centers = np.zeros((num_chars, 3))
+
+        verts, faces = fp.prim_square()
+        res = fp.repeat_primitive(
+            verts, faces, centers=centers,
+            colors=colors,
+            scales=scales)
+
+        big_verts, big_faces, big_colors, big_centers = res
+        actor = get_actor_from_primitive(
+            big_verts, big_faces, big_colors)
+        actor.GetMapper().SetVBOShiftScaleMethod(False)
+        actor.GetProperty().BackfaceCullingOff()
+
+        attribute_to_actor(actor, big_centers, 'center')
+
+        self._centers_geo = array_from_actor(actor, array_name="center")
+        self._centers_geo_orig = np.array(self._centers_geo)
+        self._centers_length = int(self._centers_geo.shape[0] / num_chars)
+        self._verts_geo = vertices_from_actor(actor)
+        self._verts_geo_orig = np.array(self._verts_geo)
+
+        self._colors_geo = array_from_actor(actor, array_name="colors")
+
+        self.vtk_actor = actor
+        img_vtk = one_chanel_to_vtk(self._img_arr)
+        tex = vtk.vtkTexture()
+        tex.SetInputDataObject(img_vtk)
+        tex.Update()
+        self.vtk_actor.GetProperty().SetTexture('charactersTexture', tex)  
+
+        attribute_to_actor(
+            self.vtk_actor,
+            uv,
+            'vUV')
+        attribute_to_actor(
+            self.vtk_actor,
+            relative_sizes,
+            'vRelativeSize')
+        padding = np.repeat(padding, 4, axis=0)
+        attribute_to_actor(
+            self.vtk_actor,
+            padding,
+            'vPadding')
+
+        self._uv = array_from_actor(
+                self.vtk_actor, array_name="vUV")
+        self._relative_sizes = array_from_actor(
+                        self.vtk_actor, array_name="vRelativeSize")
+        self._padding = array_from_actor(
+                        self.vtk_actor, array_name="vPadding")
+
+        self._centers_geo[:] = np.repeat(
+            labels_positions, self._centers_length, axis=0)
+        self._verts_geo[:] = self._verts_geo_orig + self._centers_geo
+        self.update()
+
+    @property
+    def shader_dec_vert(self):
+        shader = load("billboard_dec.vert")
+        shader += f'\n{load("text_billboard_dec.vert")}'
+
+        return shader
+
+    @property
+    def shader_impl_vert(self):
+        shader = load("text_billboard_impl.vert")
+
+        return shader
+
+    @property
+    def shader_dec_frag(self):
+        shader = load("billboard_dec.frag")
+        shader += f'\n{load("text_billboard_dec.frag")}'
+
+        return shader
+
+    @property
+    def shader_impl_frag(self):
+        shader = load('billboard_impl.frag')
+        shader += f'\n{load("text_billboard_impl.frag")}'
+        return shader
+
+    def _init_shader_frag(self):
+        # fs_impl_code = load('billboard_impl.frag')
+        # if self._marker_is_3d:
+        #     fs_impl_code += f'{load("billboard_spheres_impl.frag")}'
+        # else:
+        #     fs_impl_code += f'{load("marker_billboard_impl.frag")}'
+        
+        shader_to_actor(
+            self.vtk_actor,
+            "vertex", impl_code=self.shader_impl_vert,
+            decl_code=self.shader_dec_vert)
+        shader_to_actor(
+            self.vtk_actor,
+            "fragment", decl_code=self.shader_dec_frag)
+        shader_to_actor(
+            self.vtk_actor,
+            "fragment", impl_code=self.shader_impl_frag,
+            block="light")
+
+    @property
+    def positions(self):
+        pass
+
+    def recompute_labels(
+            self, update_labels=True, update_center=True,):
+
+        padding, labels_positions,\
+            uv, relative_sizes = \
+            text_tools.get_positions_labels_billboards(
+                self._labels, self._label_center, self._char2pos, self._scales,
+                align=self.align,
+                x_offset_ratio=self.x_offset_ratio,
+                y_offset_ratio=self.y_offset_ratio)
+        if update_labels:
+            padding = np.repeat(padding, 4, axis=0)
+            self._padding[:] = padding
+            self._uv[:] = uv
+            self._relative_sizes[:] = relative_sizes
+        if update_center:
+            self._centers_geo[:] = np.repeat(
+                labels_positions, self._centers_length, axis=0)
+            self._verts_geo[:] = self._verts_geo_orig + self._centers_geo
+
+        self.update()
+
+    def update_labels(self, labels, positions):
+        self.labels = labels
+        self.positions = positions
+        self.recompute_labels()
+
+    @positions.setter
+    def positions(self, positions):
+        self._label_center = positions
+
+    @property
+    def labels(self):
+        pass
+
+    @labels.setter
+    def labels(self, labels):
+        if self._min_label_size is not None:
+            labels = pad_labels(
+                labels, self._min_label_size, align=self.align)
+        self._labels = labels
+
+    @property
+    def colors(self):
+        return self._colors_geo[0::self._centers_length]
+
+    @colors.setter
+    def colors(self, new_colors):
+        self._colors_geo[:] = np.repeat(
+            new_colors, self._centers_length, axis=0)
+
+    def update(self):
+        update_actor(self.vtk_actor)
+
+    def __str__(self):
+        return f'FurySuperActorLabel num_nodes {self._vcount}'
+
+    def __repr__(self):
+        return f'FurySuperActorLabel num_nodes {self._vcount}'
 
 
 class FurySuperNode:
