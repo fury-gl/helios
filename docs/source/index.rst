@@ -1,9 +1,11 @@
 ============================
 Helios Network Visualization
 ============================
-
 .. image:: imgs/logo.png
     :align: center
+
+
+|Description|
 
 .. currentmodule:: helios
 

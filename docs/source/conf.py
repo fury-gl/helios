@@ -46,20 +46,23 @@ ogp_site_url = "http://heliosnetwork.io/"
 ogp_image = "https://heliosnetwork.io/_images/logo.png"
 ogp_description_length = 300
 
-description = "\
-Helios is a Python library aiming at providing an easy way to visualize and streaming huge \
-networks dynamically. It incorporates state-of-the-art layout algorithms and new data \
-optimized rendering techniques to provide a high level of interactivity and \
-responsiveness."
-#description = ' Helios is a Python library  to visualize huge networks dynamically.'
+description = 'Helios is a Python library that aims to provide an easy way to \
+visualize huge networks dynamically. Helios also provides visualizations through \
+an interactive stadia-like streaming system in which users can be \
+collaboratively access (and share) visualizations created in a server or through \
+Jupyter Notebook/Lab environments.'
 
-ogp_custom_meta_tags = [
-    f'<meta name="description" content="{description}">',
-    '<meta name="image" content="https://heliosnetwork.io/_images/helios-og-face.png">',
-    '<meta name="twitter:card" content="summary">',
-    f'<meta name="twitter:description" content="{description}">',
-    '<meta name="og:type" content="website">'
-]
+rst_epilog = f"""
+.. |Description| replace:: {description}
+"""
+
+# ogp_custom_meta_tags = [
+#     f'<meta name="description" content="{description}">',
+#     '<meta name="image" content="https://heliosnetwork.io/_images/helios-og-face.png">',
+#     '<meta name="twitter:card" content="summary">',
+#     f'<meta name="twitter:description" content="{description}">',
+#     '<meta name="og:type" content="website">'
+# ]
 # if 'IN_READTHEDOCS' not in os.environ.keys():
 extensions.append('sphinx_gallery.gen_gallery')
 # -- Options for sphinx gallery -------------------------------------------
