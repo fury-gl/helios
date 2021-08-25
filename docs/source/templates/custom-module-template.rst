@@ -2,16 +2,38 @@
 
 
 .. automodule:: {{ fullname }}
-   
 
+   {% block table %}
+   {% if classes %}
+   
+   List of Objects
+   ---------------
+   {% for objname in classes %}
+      `{{objname}},  <#{{fullname}}.{{objname}}>`_
+
+   {%- endfor %}
+   {% endif %}
+   {% if functions %}
+   List of Functions
+   -----------------
+   {% for function in functions %}
+      `{{function}},  <#{{fullname}}.{{function}}>`_
+   {%- endfor %}
+   {% endif %}
+   {% endblock %}
    {% block functions %}
    {% if functions %}
-   .. rubric:: {{ _('Functions') }}
 
    .. autosummary::
       :toctree:
       :nosignatures:
    {% for item in functions %}
+   {% set vars = {'under':''} %}
+   {% for stuff in range(item|length) %}
+      {% if vars.update({'under': '-'+vars['under']}) %} {% endif %}
+   {%- endfor %}
+   {{ item }}
+   {{vars['under']}}
    .. autofunction:: {{ item }}
 
    .. _sphx_glr_backref_{{fullname}}.{{item}}:
@@ -25,10 +47,14 @@
 
    {% block classes %}
    {% if classes %}
-   .. rubric:: {{ _('Classes') }}
-
-  
    {% for objname in classes %}
+   {% set vars = {'under':''} %}
+   {% for stuff in range(objname|length) %}
+      {% if vars.update({'under': '-'+vars['under']}) %} {% endif %}
+   {%- endfor %}
+   {{ objname }}
+   {{vars['under']}}
+
    .. autoclass:: {{ objname }}
       :members:
       :show-inheritance:
