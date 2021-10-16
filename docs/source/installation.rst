@@ -72,24 +72,6 @@ There are two ways to run Helios tests:
 
     pytest -svv helios
 
-- To run a specific test file
-
-.. code-block:: shell
-
-    pytest -svv helios/tests/test_actor.py
-
-- To run a specific test directory
-
-.. code-block:: shell
-
-    pytest -svv helios/tests
-
-- To run a specific test function
-
-.. code-block:: shell
-
-    pytest -svv -k "test_my_function_name"
-
 Running the Tests Offscreen
 ---------------------------
 
@@ -102,14 +84,14 @@ Since Xvfb will require an X server (we also recommend to install XQuartz packag
 
     export DISPLAY=:0
     Xvfb :0 -screen 1920x1080x24 > /dev/null 2>1 &
-    pytest -svv fury
+    pytest -svv helios
 
 - Second option
 
 .. code-block:: shell
 
     export DISPLAY=:0
-    xvfb-run --server-args="-screen 0 1920x1080x24" pytest -svv fury
+    xvfb-run --server-args="-screen 0 1920x1080x24" pytest -svv helios
 
 
 Populating our Documentation
